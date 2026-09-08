@@ -8,6 +8,17 @@
 
 **Input**: User description: "Create an archery score tracking mobile app for Android. Use a native language to generate an apk package that can be installed in device. Use only updated libraries with no vulnerabilities. Use Supabase for storage. Develop using Test Driven Design."
 
+## Clarifications
+
+### Session 2026-09-08
+
+- Q: After a session is marked complete, should scores remain editable? → A: Editable with confirmation
+- Q: Can an in-progress session be resumed after interruption? → A: Resumable — persists and auto-restores on next launch
+- Q: How should sync conflicts between multiple devices be resolved? → A: Last-write-wins per arrow score
+- Q: What session metadata should be tracked? → A: Distance + discipline per session
+- Q: Which disciplines must be supported? → A: Olympic recurve, traditional recurve, barebow, longbow, compound bow
+- Q: Should the app support data export? → A: CSV export via Android share sheet
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Record an Archery Round (Priority: P1)
@@ -85,10 +96,15 @@ An archer wants to see their performance trends over time. They access a statist
 - **FR-011**: System MUST support standard archery scoring (1-10 for 10-zone, 1-5 for 5-zone, X-ring scoring)
 - **FR-012**: System MUST show an empty state when no sessions exist
 - **FR-013**: System MUST generate a downloadable APK for Android device installation
+- **FR-014**: System MUST allow editing of arrow scores in completed sessions, but MUST require user confirmation before any score modification
+- **FR-015**: System MUST persist in-progress sessions and restore them automatically on app relaunch
+- **FR-016**: System MUST resolve multi-device sync conflicts using last-write-wins per arrow score, based on edit timestamps
+- **FR-017**: System MUST record shooting distance (e.g., 18m, 30m, 70m) and discipline for each session. Supported disciplines: olympic recurve, traditional recurve, barebow, longbow, compound bow
+- **FR-018**: System MUST export sessions to CSV format and make it shareable via the Android share sheet
 
 ### Key Entities
 
-- **Session**: A single archery practice or competition round. Contains metadata (date, round type, notes) and a collection of ends
+- **Session**: A single archery practice or competition round. Contains metadata (date, round type, distance, discipline [olympic recurve, traditional recurve, barebow, longbow, compound bow], notes) and a collection of ends. Lifecycle: active (resumable) → complete; completed sessions remain editable with confirmation
 - **End**: A group of arrows shot together (typically 3 or 6 arrows). Belongs to a session and contains individual arrow scores
 - **Arrow**: A single shot score within an end. Contains the numeric score value
 - **User Preferences**: App settings including default round types, display preferences, and sync configuration
