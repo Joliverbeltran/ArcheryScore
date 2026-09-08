@@ -54,7 +54,7 @@ class ActiveSessionViewModel @Inject constructor(
         }
     }
 
-    fun recordArrow(arrow: Arrow, score: Int) {
+    fun recordArrow(arrow: Arrow, score: Int, isXRing: Boolean = false) {
         viewModelScope.launch {
             val current = detail.value ?: return@launch
             runCatching {
@@ -62,6 +62,7 @@ class ActiveSessionViewModel @Inject constructor(
                     sessionId = sessionId,
                     arrow = arrow,
                     newScore = score,
+                    isXRing = isXRing,
                 )
             }
         }

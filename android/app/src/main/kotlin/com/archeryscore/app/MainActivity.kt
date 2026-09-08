@@ -3,6 +3,7 @@ package com.archeryscore.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import com.archeryscore.app.ui.navigation.ArcheryNavHost
 import com.archeryscore.app.ui.theme.ArcheryScoreTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -12,7 +13,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ArcheryScoreTheme {
-                // Navigation host is wired in later phases.
+                ArcheryNavHost()
             }
         }
     }
