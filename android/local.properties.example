@@ -1,4 +1,4 @@
 sdk.dir=/home/oliver/Android/Sdk
 # Supabase project credentials (constitution II: never commit these)
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUPABASE_URL=https://xkqnlibgfzfzvdkuqnbn.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_ZyfbUezo2Heq1E_3nBdTqg_W_W8nDVk

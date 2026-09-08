@@ -33,6 +33,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- WorkManager default initializer is sufficient; explicit worker wiring via Hilt in code. -->
+        <!-- WorkManager uses Configuration.Provider from ArcheryScoreApp. -->
     </application>
 </manifest>
