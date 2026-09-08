@@ -18,7 +18,7 @@
 | Background sync | WorkManager **2.11.0+** | Latest release window Mar 25, 2026. |
 | Networking (Supabase) | supabase-kt BOM **3.8.0** (`io.github.jan-tennert.supabase:bom`) | Latest supabase-kt (Aug 27, 2026). Modules: `auth-kt`, `postgrest-kt`, `realtime-kt`, `storage-kt`, `functions-kt`. Requires minSdk 26 — matches constitution. |
 | HTTP client (transitive) | Ktor **3.4.0** (`ktor-client-okhttp`) | Latest stable (Jan 2026). |
-| Testing | JUnit5 + MockK (latest, ≥ 1.14.6) + Turbine (1.3.x) + Room testing | MockK latest release May 2026. Turbine latest 1.3.x line. |
+| Testing | JUnit5 + MockK (latest, ≥ 1.14.6) + Turbine (1.2.0) + Room testing | MockK latest release May 2026. Turbine latest 1.2.0. |
 | AndroidX core | core-ktx **1.19.0**, activity-compose **1.13.0**, lifecycle-runtime-ktx **2.10.0** | Latest stable AndroidX. |
 
 ## Notes / Open items
@@ -48,5 +48,5 @@
 | lifecycle-runtime-ktx | 2.10.0 |
 | Ktor | 3.4.0 |
 | MockK | ≥ 1.14.6 |
-| Turbine | 1.3.x |
+| Turbine | 1.2.0 |
 | minSdk / targetSdk / compileSdk | 26 / 36 / 37 |

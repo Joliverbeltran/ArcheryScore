@@ -1,18 +1,19 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 0.0.0 → 1.0.0
-Modified principles: N/A (initial constitution)
-Added sections:
-  - Core Principles (5 principles)
-  - Technology Stack & Constraints
-  - Development Workflow & Quality Gates
-  - Governance
-Removed sections: N/A
+Version change: 1.0.0 → 1.0.1 (PATCH: clarifications)
+Modified principles: N/A
+Modified sections:
+  - Principle IV: Min/Target SDK updated (26/34 → 26/36), Gradle 8.x → 9.x
+  - Technology Stack: Kotlin 2.0+ → 2.3.21, Gradle 8.x → 9.x, Target SDK 34 → 36,
+    added compileSdk 37 note
+Rationale: 2026 AndroidX/Play ecosystem requires compileSdk 37 (Compose BOM
+2026.08.00) and targetSdk 36 (Play policy Aug 2026). AGP 9 requires Gradle 9.x.
+Supersedes the plan.md CONSTITUTION_AMENDMENT_FOLLOWUP.
 Templates requiring updates:
-  - .specify/templates/plan-template.md ✅ aligned (mobile-app structure)
-  - .specify/templates/spec-template.md ✅ aligned (user story format)
-  - .specify/templates/tasks-template.md ✅ aligned (phase structure)
+  - .specify/templates/plan-template.md ✅ aligned
+  - .specify/templates/spec-template.md ✅ aligned
+  - .specify/templates/tasks-template.md ✅ aligned
 Follow-up TODOs: None
 -->
 
@@ -55,7 +56,7 @@ The app MUST be built using:
 - **DI**: Hilt
 - **Navigation**: Compose Navigation
 - **Gradle**: Kotlin DSL (build.gradle.kts)
-- **Min SDK**: 26 (Android 8.0) | **Target SDK**: 34
+- **Min SDK**: 26 (Android 8.0) | **Target SDK**: 36 | **compileSdk**: 37
 
 ### V. Offline Resilience
 
@@ -69,15 +70,16 @@ The app MUST handle network unavailability gracefully:
 
 | Layer | Technology | Version |
 |-------|-----------|---------|
-| Language | Kotlin | 2.0+ |
+| Language | Kotlin | 2.3.21 |
 | UI Framework | Jetpack Compose | Latest BOM |
 | Architecture | MVVM + Clean Architecture | - |
 | DI | Hilt | Latest |
 | Storage | Supabase Kotlin SDK | Latest |
-| Build System | Gradle (Kotlin DSL) | 8.x |
+| Build System | Gradle (Kotlin DSL) | 9.x |
 | Testing | JUnit5 + Mockk + Turbine | Latest |
 | Min SDK | 26 | - |
-| Target SDK | 34 | - |
+| Target SDK | 36 | - |
+| compileSdk | 37 (required by Compose BOM 2026.08.00) | - |
 
 **Constraints**:
 - APK size MUST NOT exceed 15MB
@@ -116,4 +118,4 @@ This constitution supersedes all other development practices for the ArcheryScor
 - Compliance review is required before any release
 - For runtime development guidance, refer to AGENTS.md
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-08 | **Last Amended**: 2026-09-08
+**Version**: 1.0.1 | **Ratified**: 2026-09-08 | **Last Amended**: 2026-09-08
