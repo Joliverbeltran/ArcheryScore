@@ -28,11 +28,11 @@ Repo root layout per plan.md: single-module Android app under `android/`, Supaba
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project structure per plan.md (`android/` single module, `gradle/wrapper`, `settings.gradle.kts`, `gradle.properties`, empty `domain/data/ui` packages)
-- [ ] T002 Create version catalog `android/gradle/libs.versions.toml` with the full research.md version matrix (Kotlin 2.3.21, AGP 9.2.0, Compose BOM 2026.08.00, Hilt 2.60.1, Nav 2.10.0, Room 2.8.4, DataStore 1.2.1, WorkManager 2.11.0+, supabase-kt BOM 3.8.0, Ktor 3.4.0, MockK ≥1.14.6, Turbine 1.3.x)
-- [ ] T003 Wire plugins in `android/app/build.gradle.kts` + root (Kotlin, KSP matching AGP 9.2.0, Hilt, Compose, Room KSP, JUnit5) — compileSdk 37 / targetSdk 36 / minSdk 26
+- [x] T001 Create project structure per plan.md (`android/` single module, `gradle/wrapper`, `settings.gradle.kts`, `gradle.properties`, empty `domain/data/ui` packages)
+- [x] T002 Create version catalog `android/gradle/libs.versions.toml` with the full research.md version matrix (Kotlin 2.3.21, AGP 9.2.0, Compose BOM 2026.08.00, Hilt 2.60.1, Nav 2.10.0, Room 2.8.4, DataStore 1.2.1, WorkManager 2.11.0+, supabase-kt BOM 3.8.0, Ktor 3.4.0, MockK ≥1.14.6, Turbine 1.3.x)
+- [x] T003 Wire plugins in `android/app/build.gradle.kts` + root (Kotlin, KSP matching AGP 9.2.0, Hilt, Compose, Room KSP, JUnit5) — compileSdk 37 / targetSdk 36 / minSdk 26
 - [ ] T004 [P] Configure lint (zero-error gate) + `local.properties.example` with `SUPABASE_URL`/`SUPABASE_ANON_KEY` placeholders (git-ignored per constitution II)
-- [ ] T005 Amend constitution to v1.0.1 (CONSTITUTION_AMENDMENT_FOLLOWUP): update Tech table — Target SDK 36, Gradle 9.x, Kotlin 2.3.21 — in `.specify/memory/constitution.md`
+- [x] T005 Amend constitution to v1.0.1 (CONSTITUTION_AMENDMENT_FOLLOWUP): update Tech table — Target SDK 36, Gradle 9.x, Kotlin 2.3.21 — in `.specify/memory/constitution.md`
 
 ---
 
@@ -42,16 +42,16 @@ Repo root layout per plan.md: single-module Android app under `android/`, Supaba
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Create `supabase/migrations/0001_init.sql` from contracts/storage.md (sessions/ends/arrows tables, check constraints, one-ACTIVE partial unique index, RLS policies); apply via Supabase CLI
-- [ ] T007 [P] Room entities + DAOs mirroring data-model.md (Session, End, Arrow, Preferences, SyncWrite outbox) in `android/app/src/main/kotlin/com/archeryscore/app/data/local/`
+- [x] T006 Create `supabase/migrations/0001_init.sql` from contracts/storage.md (sessions/ends/arrows tables, check constraints, one-ACTIVE partial unique index, RLS policies); apply via Supabase CLI
+- [x] T007 [P] Room entities + DAOs mirroring data-model.md (Session, End, Arrow, Preferences, SyncWrite outbox) in `android/app/src/main/kotlin/com/archeryscore/app/data/local/`
 - [ ] T008 [P] Auth: `AuthRepository` interface + Supabase `auth-kt` implementation per contracts/auth.md (signUp/signIn/restore/signOut, typed `AuthResult`)
-- [ ] T009 [P] Hilt DI modules (`di/`): Room database, SupabaseClient (URL+anon key from BuildConfig/local.properties), DataStore, NetworkMonitor, Dispatchers
-- [ ] T010 [P] Sync infrastructure: `SyncWrite` outbox + `SyncRunner` (push→confirm→pull, LWW by `edited_at`) + `SyncWorker` (WorkManager, network constraint, backoff, attempt cap 10) per contracts/data-sync.md
+- [x] T009 [P] Hilt DI modules (`di/`): Room database, SupabaseClient (URL+anon key from BuildConfig/local.properties), DataStore, NetworkMonitor, Dispatchers
+- [x] T010 [P] Sync infrastructure: `SyncWrite` outbox + `SyncRunner` (push→confirm→pull, LWW by `edited_at`) + `SyncWorker` (WorkManager, network constraint, backoff, attempt cap 10) per contracts/data-sync.md
 - [ ] T011 [P] Connectivity awareness: `NetworkMonitor` + WorkManager `NetworkType.CONNECTED` constraint wiring
-- [ ] T012 Sync status derivation: `SyncStatusRepository` (SYNCED/PENDING/ERROR per session, FR-010) per contracts/data-sync.md
-- [ ] T013 Navigation shell: `MainActivity`, `ArcheryScoreApp`, Material 3 theme, `NavHost` with auth/session/history/statistics routes in `android/app/src/main/kotlin/com/archeryscore/app/ui/`
-- [ ] T014 DataStore preferences repository (defaults: roundType, endCount, arrowsPerEnd, distance, discipline, x-ring pref) per data-model.md PREFERENCES
-- [ ] T015 Mappers + repository interface layer: `android/app/src/main/kotlin/com/archeryscore/app/data/repository/` (local↔remote entity mapping, `SessionDataSource`/`AuthDataSource` interfaces)
+- [x] T012 Sync status derivation: `SyncStatusRepository` (SYNCED/PENDING/ERROR per session, FR-010) per contracts/data-sync.md
+- [x] T013 Navigation shell: `MainActivity`, `ArcheryScoreApp`, Material 3 theme, `NavHost` with auth/session/history/statistics routes in `android/app/src/main/kotlin/com/archeryscore/app/ui/`
+- [x] T014 DataStore preferences repository (defaults: roundType, endCount, arrowsPerEnd, distance, discipline, x-ring pref) per data-model.md PREFERENCES
+- [x] T015 Mappers + repository interface layer: `android/app/src/main/kotlin/com/archeryscore/app/data/repository/` (local↔remote entity mapping, `SessionDataSource`/`AuthDataSource` interfaces)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -65,23 +65,23 @@ Repo root layout per plan.md: single-module Android app under `android/`, Supaba
 
 ### Tests for User Story 1 (write FIRST, confirm RED) ⚠️
 
-- [ ] T016 [P] [US1] Unit test `ScoreValidator` (FR-002/011: 1-10 TEN_ZONE, 1-5 FIVE_ZONE, X-ring rule `score==10` only, invalid negatives/max throw) in `android/app/src/test/.../domain/userguide/ScoreValidatorTest.kt`
-- [ ] T017 [P] [US1] Unit test `SessionCalculator` (FR-003: running total, final score, X-count) in `android/app/src/test/.../domain/userguide/SessionCalculatorTest.kt`
-- [ ] T018 [P] [US1] Unit test `ResumeSessionViewModel` (FR-015: auto-restore ACTIVE on launch, block second ACTIVE — spec edge case) in `android/app/src/test/.../ui/session/ResumeSessionViewModelTest.kt`
-- [ ] T019 [P] [US1] Unit test `EditScoreUseCase` (FR-014: COMPLETE edit requires confirmation; confirmed edit bumps `edited_at` + enqueues SyncWrite) in `android/app/src/test/.../domain/userguide/EditScoreUseCaseTest.kt`
+- [x] T016 [P] [US1] Unit test `ScoreValidator` (FR-002/011: 1-10 TEN_ZONE, 1-5 FIVE_ZONE, X-ring rule `score==10` only, invalid negatives/max throw) in `android/app/src/test/.../domain/userguide/ScoreValidatorTest.kt`
+- [x] T017 [P] [US1] Unit test `SessionCalculator` (FR-003: running total, final score, X-count) in `android/app/src/test/.../domain/userguide/SessionCalculatorTest.kt`
+- [x] T018 [P] [US1] Unit test `ResumeSessionViewModel` (FR-015: auto-restore ACTIVE on launch, block second ACTIVE — spec edge case) in `android/app/src/test/.../ui/session/ResumeSessionViewModelTest.kt`
+- [x] T019 [P] [US1] Unit test `EditScoreUseCase` (FR-014: COMPLETE edit requires confirmation; confirmed edit bumps `edited_at` + enqueues SyncWrite) in `android/app/src/test/.../domain/userguide/EditScoreUseCaseTest.kt`
 - [ ] T020 [P] [US1] Unit test `RecordSessionViewModel` (FR-001 configurable ends/arrows, FR-017 distance+discipline) in `android/app/src/test/.../ui/session/RecordSessionViewModelTest.kt`
 - [ ] T021 [US1] Integration test: offline score entry → reconnect → SyncWorker flushes outbox → Supabase rows match; LWW — simulate device A/B same arrow, later `edited_at` wins (FR-016, contracts/data-sync.md)
 
 ### Implementation for User Story 1
 
-- [ ] T022 [US1] `ScoreValidator` in `domain/model/` (drives FR-002 validation, used by UI + repository)
-- [ ] T023 [US1] `SessionCalculator` in `domain/userguide/` (running total + final totals, FR-003)
-- [ ] T024 [US1] `SessionRepository` impl: Room-first writes, outbox enqueue, Supabase push (FR-004/005)
+- [x] T022 [US1] `ScoreValidator` in `domain/model/` (drives FR-002 validation, used by UI + repository)
+- [x] T023 [US1] `SessionCalculator` in `domain/userguide/` (running total + final totals, FR-003)
+- [x] T024 [US1] `SessionRepository` impl: Room-first writes, outbox enqueue, Supabase push (FR-004/005)
 - [ ] T025 [US1] `RecordSessionViewModel` (FR-001 create, FR-017 metadata; runs totals via T023)
-- [ ] T026 [US1] `ResumeSessionViewModel` (FR-015 restore + ACTIVE invariant, spec edge case handling)
-- [ ] T027 [US1] `EditScoreUseCase` + confirmation dialog (FR-014)
-- [ ] T028 [US1] `RecordSessionScreen` + arrow input grid + running total header (Compose, M3; sync indicator chip FR-010) in `ui/session/`
-- [ ] T029 [US1] Wire persistence on every arrow save (synchronous Room write — spec edge case "force-close mid-session")
+- [x] T026 [US1] `ResumeSessionViewModel` (FR-015 restore + ACTIVE invariant, spec edge case handling)
+- [x] T027 [US1] `EditScoreUseCase` + confirmation dialog (FR-014)
+- [x] T028 [US1] `RecordSessionScreen` + arrow input grid + running total header (Compose, M3; sync indicator chip FR-010) in `ui/session/`
+- [x] T029 [US1] Wire persistence on every arrow save (synchronous Room write — spec edge case "force-close mid-session")
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently (offline + sync)
 
@@ -95,19 +95,19 @@ Repo root layout per plan.md: single-module Android app under `android/`, Supaba
 
 ### Tests for User Story 2 (write FIRST, confirm RED) ⚠️
 
-- [ ] T030 [P] [US2] Unit test `HistoryViewModel` (FR-006 reverse-chron sorting, FR-012 empty state, sync status indicators FR-010) in `android/app/src/test/.../ui/history/HistoryViewModelTest.kt`
+- [x] T030 [P] [US2] Unit test `HistoryViewModel` (FR-006 reverse-chron sorting, FR-012 empty state, sync status indicators FR-010) in `android/app/src/test/.../ui/history/HistoryViewModelTest.kt`
 - [ ] T031 [P] [US2] Unit test `SessionDetailMapper` (FR-007 per-end breakdown + per-end totals) in `android/app/src/test/.../domain/userguide/SessionDetailMapperTest.kt`
 - [ ] T032 [P] [US2] Unit test `DeleteSessionUseCase` (FR-009: confirmation, cascade delete, DELETE outbox coalescing per contracts/data-sync.md) in `android/app/src/test/.../domain/userguide/DeleteSessionUseCaseTest.kt`
-- [ ] T033 [P] [US2] Unit test `CsvExporter` (contracts/csv-export.md: exact header, RFC-4180 escaping, ordering, UTF-8) in `android/app/src/test/.../data/export/CsvExporterTest.kt`
+- [x] T033 [P] [US2] Unit test `CsvExporter` (contracts/csv-export.md: exact header, RFC-4180 escaping, ordering, UTF-8) in `android/app/src/test/.../data/export/CsvExporterTest.kt`
 - [ ] T034 [US2] Instrumented test: CSV share flow produces `content://` URI via FileProvider, `text/csv` (contracts/csv-export.md)
 
 ### Implementation for User Story 2
 
-- [ ] T035 [US2] History repository queries (`android/app/src/main/kotlin/com/archeryscore/app/data/repository/`) — date-desc, per-session sync status join
-- [ ] T036 [US2] `HistoryViewModel` + list screen (FR-006, FR-012 empty state, FR-010 indicators) in `ui/history/`
-- [ ] T037 [US2] `SessionDetailViewModel` + detail screen (FR-007 breakdown, per-end stats, edit entry point FR-014)
+- [x] T035 [US2] History repository queries (`android/app/src/main/kotlin/com/archeryscore/app/data/repository/`) — date-desc, per-session sync status join
+- [x] T036 [US2] `HistoryViewModel` + list screen (FR-006, FR-012 empty state, FR-010 indicators) in `ui/history/`
+- [x] T037 [US2] `SessionDetailViewModel` + detail screen (FR-007 breakdown, per-end stats, edit entry point FR-014)
 - [ ] T038 [US2] Delete flow (FR-009 confirmation dialog + cascade + DELETE outbox)
-- [ ] T039 [US2] `CsvExporter` + `FileProvider` + share sheet (FR-018, contracts/csv-export.md)
+- [x] T039 [US2] `CsvExporter` + `FileProvider` + share sheet (FR-018, contracts/csv-export.md)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently
 
@@ -121,14 +121,14 @@ Repo root layout per plan.md: single-module Android app under `android/`, Supaba
 
 ### Tests for User Story 3 (write FIRST, confirm RED) ⚠️
 
-- [ ] T040 [P] [US3] Unit test `StatsCalculator` (FR-008: average per session, best session, improvement trend; X-count edge cases) in `android/app/src/test/.../domain/userguide/StatsCalculatorTest.kt`
+- [x] T040 [P] [US3] Unit test `StatsCalculator` (FR-008: average per session, best session, improvement trend; X-count edge cases) in `android/app/src/test/.../domain/userguide/StatsCalculatorTest.kt`
 - [ ] T041 [P] [US3] Unit test `StatsFilter` (FR-008 scenario 2 date-range filter; scenario 3 <3 sessions → "need more data" state) in `android/app/src/test/.../domain/userguide/StatsFilterTest.kt`
 
 ### Implementation for User Story 3
 
-- [ ] T042 [US3] `StatsCalculator` in `domain/userguide/`
+- [x] T042 [US3] `StatsCalculator` in `domain/userguide/`
 - [ ] T043 [US3] `StatsRepository` impl — aggregations over ≤500 sessions (SC-005: ≤1s), completed sessions only
-- [ ] T044 [US3] `StatisticsViewModel` + screen (avg/best/trend, date-range chips) in `ui/statistics/`
+- [x] T044 [US3] `StatisticsViewModel` + screen (avg/best/trend, date-range chips) in `ui/statistics/`
 
 **Checkpoint**: All user stories should now be independently functional
 

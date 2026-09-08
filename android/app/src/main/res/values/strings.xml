@@ -51,6 +51,9 @@
     <string name="export_csv">Export CSV</string>
     <string name="share_title">Share session</string>
     <string name="export_error">Could not export session</string>
+    <string name="delete_session">Delete session</string>
+    <string name="delete_dialog_title">Delete session?</string>
+    <string name="delete_dialog_message">This removes the session and all of its arrows.</string>
 
     <string name="stats_title">Statistics</string>
     <string name="total_sessions">Sessions</string>

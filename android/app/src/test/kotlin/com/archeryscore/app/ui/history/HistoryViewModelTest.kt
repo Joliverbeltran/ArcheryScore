@@ -108,6 +108,7 @@ class HistoryViewModelTest {
         val vm = SessionDetailViewModel(
             androidx.lifecycle.SavedStateHandle(mapOf("sessionId" to s.id.toString())),
             repo,
+            com.archeryscore.app.domain.usecase.DeleteSessionUseCase(repo),
         )
         dispatcher.scheduler.advanceUntilIdle()
 

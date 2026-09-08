@@ -7,11 +7,13 @@ import com.archeryscore.app.data.csv.CsvArrowRow
 import com.archeryscore.app.data.csv.CsvExporter
 import com.archeryscore.app.domain.repository.SessionDetail
 import com.archeryscore.app.domain.repository.SessionRepository
+import com.archeryscore.app.domain.usecase.DeleteSessionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class DetailUiState(
@@ -22,6 +24,7 @@ data class DetailUiState(
 class SessionDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     sessionRepository: SessionRepository,
+    private val deleteSessionUseCase: DeleteSessionUseCase,
 ) : ViewModel() {
 
     val sessionId: String = checkNotNull(savedStateHandle["sessionId"])
@@ -30,6 +33,12 @@ class SessionDetailViewModel @Inject constructor(
         .observeSessionDetail(sessionId)
         .map { DetailUiState(it) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, DetailUiState())
+
+    fun deleteSession(confirmed: Boolean) {
+        viewModelScope.launch {
+            runCatching { deleteSessionUseCase.delete(sessionId, confirmed) }
+        }
+    }
 
     fun exportCsv(detail: SessionDetail): String {
         val rows = detail.ends.flatMap { e ->
