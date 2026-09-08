@@ -1,50 +1,119 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+==================
+Version change: 0.0.0 → 1.0.0
+Modified principles: N/A (initial constitution)
+Added sections:
+  - Core Principles (5 principles)
+  - Technology Stack & Constraints
+  - Development Workflow & Quality Gates
+  - Governance
+Removed sections: N/A
+Templates requiring updates:
+  - .specify/templates/plan-template.md ✅ aligned (mobile-app structure)
+  - .specify/templates/spec-template.md ✅ aligned (user story format)
+  - .specify/templates/tasks-template.md ✅ aligned (phase structure)
+Follow-up TODOs: None
+-->
+
+# ArcheryScore Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Test-Driven Development (NON-NEGOTIABLE)
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+All production code MUST follow strict TDD (Red-Green-Refactor cycle):
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+1. Write a failing test that defines expected behavior
+2. Implement the minimal code to make the test pass
+3. Refactor while keeping all tests green
+4. Every feature, bug fix, and refactoring MUST have tests written BEFORE implementation
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+Test types required per feature:
+- **Unit tests**: For ViewModels, repositories, utilities, domain logic
+- **Integration tests**: For Supabase interactions, navigation flows
+- **UI tests**: For critical user journeys (score entry, session management)
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### II. Security & Dependency Hygiene
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+All dependencies MUST be:
+- Updated to latest stable versions at project start and reviewed quarterly
+- Scanned for known CVEs using `dependencyCheck` or equivalent
+- Excluded from the build if any critical/high vulnerability exists with no patch
+- Supabase credentials MUST be stored in local properties, never in version control
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Supabase-First Storage
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+All persistent data MUST be stored in Supabase (PostgreSQL). Local caching MAY be used for offline reads but the Supabase database is the single source of truth. Offline writes MUST queue and sync when connectivity resumes.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### IV. Native Android with Modern Stack
+
+The app MUST be built using:
+- **Language**: Kotlin (100%)
+- **UI**: Jetpack Compose with Material 3
+- **Architecture**: MVVM + Clean Architecture
+- **DI**: Hilt
+- **Navigation**: Compose Navigation
+- **Gradle**: Kotlin DSL (build.gradle.kts)
+- **Min SDK**: 26 (Android 8.0) | **Target SDK**: 34
+
+### V. Offline Resilience
+
+The app MUST handle network unavailability gracefully:
+- Score entry MUST work offline
+- Data MUST sync automatically when connectivity returns
+- User MUST see clear indicators of sync status
+- No data loss during connectivity interruptions
+
+## Technology Stack & Constraints
+
+| Layer | Technology | Version |
+|-------|-----------|---------|
+| Language | Kotlin | 2.0+ |
+| UI Framework | Jetpack Compose | Latest BOM |
+| Architecture | MVVM + Clean Architecture | - |
+| DI | Hilt | Latest |
+| Storage | Supabase Kotlin SDK | Latest |
+| Build System | Gradle (Kotlin DSL) | 8.x |
+| Testing | JUnit5 + Mockk + Turbine | Latest |
+| Min SDK | 26 | - |
+| Target SDK | 34 | - |
+
+**Constraints**:
+- APK size MUST NOT exceed 15MB
+- Cold start MUST be under 2 seconds on mid-range devices
+- All network calls MUST use HTTPS only
+- No hardcoded strings in code; use string resources
+
+## Development Workflow & Quality Gates
+
+### Branch Strategy
+- `main`: Production-ready code
+- `develop`: Integration branch
+- `feature/*`: Feature branches off develop
+- `fix/*`: Bug fix branches off develop
+
+### Quality Gates (mandatory before merge)
+1. All unit tests pass
+2. All integration tests pass
+3. Lint check passes with zero errors
+4. No dependency vulnerabilities (critical/high)
+5. Code review approved
+6. TDD cycle verified (test-first evidence in commit history)
+
+### Commit Convention
+- Format: `type(scope): description`
+- Types: `feat`, `fix`, `test`, `refactor`, `chore`, `docs`
+- Scope: feature area (e.g., `score`, `session`, `sync`, `ui`)
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other development practices for the ArcheryScore project.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+- All pull requests MUST verify compliance with these principles
+- Amendments MUST be documented with rationale and version bump
+- Versioning follows semantic versioning: MAJOR (principle removal/redefinition), MINOR (new principle/section), PATCH (clarifications)
+- Compliance review is required before any release
+- For runtime development guidance, refer to AGENTS.md
+
+**Version**: 1.0.0 | **Ratified**: 2026-09-08 | **Last Amended**: 2026-09-08
