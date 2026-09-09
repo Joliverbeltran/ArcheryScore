@@ -6,7 +6,10 @@ import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionTotals
 import com.archeryscore.app.domain.model.SyncStatus
 import com.archeryscore.app.domain.model.UserPreferences
+import com.archeryscore.app.domain.usecase.DisciplineStats
+import com.archeryscore.app.domain.usecase.StatsAggregate
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 data class SessionListItem(
     val session: Session,
@@ -64,7 +67,35 @@ interface SyncStatusRepository {
     fun observeStatus(userId: String): Flow<SyncStatus>
 }
 
+interface StatsRepository {
+    fun observeStats(userId: String, from: Instant?, to: Instant?): Flow<StatsSnapshot>
+}
+
+data class StatsSnapshot(
+    val aggregate: StatsAggregate,
+    val byDiscipline: List<DisciplineStats>,
+    val needsMoreData: Boolean,
+)
+
 interface AuthRepository {
     val currentUserId: Flow<String?>
     suspend fun requireUserId(): String
+    suspend fun signUp(email: String, password: String): AuthResult
+    suspend fun signIn(email: String, password: String): AuthResult
+    suspend fun restore(): AuthResult
+    suspend fun signOut(): AuthResult
+}
+
+sealed class AuthResult {
+    data object Success : AuthResult()
+    data class Failure(val reason: AuthFailureReason) : AuthResult()
+}
+
+enum class AuthFailureReason {
+    INVALID_EMAIL,
+    WEAK_PASSWORD,
+    INVALID_CREDENTIALS,
+    EMAIL_TAKEN,
+    NETWORK,
+    UNKNOWN,
 }
