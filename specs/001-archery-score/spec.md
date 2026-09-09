@@ -115,12 +115,11 @@ An archer wants to see their performance trends over time. They access a statist
 
 - **SC-001**: Users can record a complete archery session in under 3 minutes from opening the app
 - **SC-002**: Score entry responsiveness is under 100ms from input to total update
-- **SC-003**: 100% of score entries are preserved across app restarts and connectivity loss
+- **SC-003**: 100% of score entries are preserved across app restarts, connectivity loss, and offline-to-online sync transitions
 - **SC-004**: Users can access score history within 2 seconds of tapping the history tab
 - **SC-005**: Statistics calculations complete within 1 second for up to 500 sessions
 - **SC-006**: The app APK installs successfully on Android 8.0+ devices
-- **SC-007**: Zero data loss during offline-to-online sync transitions
-- **SC-008**: All core features (record, view, statistics) work without internet connectivity after initial load
+- **SC-007**: All core features (record, view, statistics) work without internet connectivity after initial load
 
 ## Assumptions
 

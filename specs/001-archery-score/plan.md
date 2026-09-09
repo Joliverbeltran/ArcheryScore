@@ -28,7 +28,7 @@ Technical approach (from research.md): Kotlin 2.3.21, Gradle 9.4.1+, AGP 9.2.0, 
 
 **Performance Goals**: score entry → running-total ≤ 100ms (SC-002); cold start < 2s mid-range; statistics ≤ 1s for ≤ 500 sessions (SC-005); history ≤ 2s (SC-004).
 
-**Constraints**: APK ≤ 15MB · HTTPS only · no hardcoded strings (string resources) · offline-capable (SC-008) · zero data loss on offline→online (SC-007/003) · minSdk 26.
+**Constraints**: APK ≤ 15MB · HTTPS only · no hardcoded strings (string resources) · offline-capable (SC-007) · zero data loss on offline→online (SC-003) · minSdk 26.
 
 **Scale/Scope**: single-user solo archer (one ACTIVE session invariant), ≤ ~500 sessions, Android-only, no multi-archer/tournament features (spec assumptions).
 
@@ -91,7 +91,7 @@ android/
         │       ├── domain/                   # models, enums, use cases (pure Kotlin)
         │       │   ├── model/                # Session, End, Arrow, Preferences, enums
         │       │   ├── repository/           # interfaces
-        │       │   └── userguide/            # (usecases) SessionUsecase, StatsUsecase, ExportUsecase
+        │       │   └── usecases/             # SessionUsecase, StatsUsecase, ExportUsecase
         │       ├── data/                     # Room, Supabase, DataStore, outbox
         │       │   ├── local/                # Room DAOs/Entities, Outbox
         │       │   ├── remote/               # Supabase clients, DataSource

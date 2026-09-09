@@ -45,7 +45,7 @@ All dependencies MUST be:
 
 ### III. Supabase-First Storage
 
-All persistent data MUST be stored in Supabase (PostgreSQL). Local caching MAY be used for offline reads but the Supabase database is the single source of truth. Offline writes MUST queue and sync when connectivity resumes.
+All persistent data MUST be stored in Supabase (PostgreSQL), which is the single source of truth. Local caching (e.g., Room) MAY be used for offline reads and write queueing, but all local writes MUST sync to Supabase when connectivity resumes. The app MUST NOT treat local cache as authoritative for data that has not been synced.
 
 ### IV. Native Android with Modern Stack
 

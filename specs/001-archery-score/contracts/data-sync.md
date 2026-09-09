@@ -1,6 +1,6 @@
 # Contract: Data Sync (Offline-first, Last-Write-Wins)
 
-**Spec ref**: FR-004, FR-005, FR-010, FR-016, SC-003, SC-007
+**Spec ref**: FR-004, FR-005, FR-010, FR-016, SC-003
 
 ## Architecture
 

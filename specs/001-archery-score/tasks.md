@@ -65,17 +65,17 @@ Repo root layout per plan.md: single-module Android app under `android/`, Supaba
 
 ### Tests for User Story 1 (write FIRST, confirm RED) ⚠️
 
-- [x] T016 [P] [US1] Unit test `ScoreValidator` (FR-002/011: 1-10 TEN_ZONE, 1-5 FIVE_ZONE, X-ring rule `score==10` only, invalid negatives/max throw) in `android/app/src/test/.../domain/userguide/ScoreValidatorTest.kt`
-- [x] T017 [P] [US1] Unit test `SessionCalculator` (FR-003: running total, final score, X-count) in `android/app/src/test/.../domain/userguide/SessionCalculatorTest.kt`
+- [x] T016 [P] [US1] Unit test `ScoreValidator` (FR-002/011: 1-10 TEN_ZONE, 1-5 FIVE_ZONE, X-ring rule `score==10` only, invalid negatives/max throw) in `android/app/src/test/.../domain/usecases/ScoreValidatorTest.kt`
+- [x] T017 [P] [US1] Unit test `SessionCalculator` (FR-003: running total, final score, X-count) in `android/app/src/test/.../domain/usecases/SessionCalculatorTest.kt`
 - [x] T018 [P] [US1] Unit test `ResumeSessionViewModel` (FR-015: auto-restore ACTIVE on launch, block second ACTIVE — spec edge case) in `android/app/src/test/.../ui/session/ResumeSessionViewModelTest.kt`
-- [x] T019 [P] [US1] Unit test `EditScoreUseCase` (FR-014: COMPLETE edit requires confirmation; confirmed edit bumps `edited_at` + enqueues SyncWrite) in `android/app/src/test/.../domain/userguide/EditScoreUseCaseTest.kt`
-- [ ] T020 [P] [US1] Unit test `RecordSessionViewModel` (FR-001 configurable ends/arrows, FR-017 distance+discipline) in `android/app/src/test/.../ui/session/RecordSessionViewModelTest.kt`
+- [x] T019 [P] [US1] Unit test `EditScoreUseCase` (FR-014: COMPLETE edit requires confirmation; confirmed edit bumps `edited_at` + enqueues SyncWrite) in `android/app/src/test/.../domain/usecases/EditScoreUseCaseTest.kt`
+- [ ] T020 [P] [US1] ⚠️ BLOCKS T025 — must complete before US1 implementation. Unit test `RecordSessionViewModel` (FR-001 configurable ends/arrows, FR-017 distance+discipline) in `android/app/src/test/.../ui/session/RecordSessionViewModelTest.kt`
 - [ ] T021 [US1] Integration test: offline score entry → reconnect → SyncWorker flushes outbox → Supabase rows match; LWW — simulate device A/B same arrow, later `edited_at` wins (FR-016, contracts/data-sync.md)
 
 ### Implementation for User Story 1
 
 - [x] T022 [US1] `ScoreValidator` in `domain/model/` (drives FR-002 validation, used by UI + repository)
-- [x] T023 [US1] `SessionCalculator` in `domain/userguide/` (running total + final totals, FR-003)
+- [x] T023 [US1] `SessionCalculator` in `domain/usecases/` (running total + final totals, FR-003)
 - [x] T024 [US1] `SessionRepository` impl: Room-first writes, outbox enqueue, Supabase push (FR-004/005)
 - [ ] T025 [US1] `RecordSessionViewModel` (FR-001 create, FR-017 metadata; runs totals via T023)
 - [x] T026 [US1] `ResumeSessionViewModel` (FR-015 restore + ACTIVE invariant, spec edge case handling)
@@ -96,8 +96,8 @@ Repo root layout per plan.md: single-module Android app under `android/`, Supaba
 ### Tests for User Story 2 (write FIRST, confirm RED) ⚠️
 
 - [x] T030 [P] [US2] Unit test `HistoryViewModel` (FR-006 reverse-chron sorting, FR-012 empty state, sync status indicators FR-010) in `android/app/src/test/.../ui/history/HistoryViewModelTest.kt`
-- [ ] T031 [P] [US2] Unit test `SessionDetailMapper` (FR-007 per-end breakdown + per-end totals) in `android/app/src/test/.../domain/userguide/SessionDetailMapperTest.kt`
-- [ ] T032 [P] [US2] Unit test `DeleteSessionUseCase` (FR-009: confirmation, cascade delete, DELETE outbox coalescing per contracts/data-sync.md) in `android/app/src/test/.../domain/userguide/DeleteSessionUseCaseTest.kt`
+- [ ] T031 [P] [US2] Unit test `SessionDetailMapper` (FR-007 per-end breakdown + per-end totals) in `android/app/src/test/.../domain/usecases/SessionDetailMapperTest.kt`
+- [ ] T032 [P] [US2] Unit test `DeleteSessionUseCase` (FR-009: confirmation, cascade delete, DELETE outbox coalescing per contracts/data-sync.md) in `android/app/src/test/.../domain/usecases/DeleteSessionUseCaseTest.kt`
 - [x] T033 [P] [US2] Unit test `CsvExporter` (contracts/csv-export.md: exact header, RFC-4180 escaping, ordering, UTF-8) in `android/app/src/test/.../data/export/CsvExporterTest.kt`
 - [ ] T034 [US2] Instrumented test: CSV share flow produces `content://` URI via FileProvider, `text/csv` (contracts/csv-export.md)
 
@@ -121,12 +121,12 @@ Repo root layout per plan.md: single-module Android app under `android/`, Supaba
 
 ### Tests for User Story 3 (write FIRST, confirm RED) ⚠️
 
-- [x] T040 [P] [US3] Unit test `StatsCalculator` (FR-008: average per session, best session, improvement trend; X-count edge cases) in `android/app/src/test/.../domain/userguide/StatsCalculatorTest.kt`
-- [ ] T041 [P] [US3] Unit test `StatsFilter` (FR-008 scenario 2 date-range filter; scenario 3 <3 sessions → "need more data" state) in `android/app/src/test/.../domain/userguide/StatsFilterTest.kt`
+- [x] T040 [P] [US3] Unit test `StatsCalculator` (FR-008: average per session, best session, improvement trend; X-count edge cases) in `android/app/src/test/.../domain/usecases/StatsCalculatorTest.kt`
+- [ ] T041 [P] [US3] Unit test `StatsFilter` (FR-008 scenario 2 date-range filter; scenario 3 <3 sessions → "need more data" state) in `android/app/src/test/.../domain/usecases/StatsFilterTest.kt`
 
 ### Implementation for User Story 3
 
-- [x] T042 [US3] `StatsCalculator` in `domain/userguide/`
+- [x] T042 [US3] `StatsCalculator` in `domain/usecases/`
 - [ ] T043 [US3] `StatsRepository` impl — aggregations over ≤500 sessions (SC-005: ≤1s), completed sessions only
 - [x] T044 [US3] `StatisticsViewModel` + screen (avg/best/trend, date-range chips) in `ui/statistics/`
 
@@ -143,6 +143,7 @@ Repo root layout per plan.md: single-module Android app under `android/`, Supaba
 - [ ] T047 Run quickstart.md validation end-to-end: `testDebugUnitTest`, `lintDebug` (zero errors), `connectedDebugAndroidTest`
 - [ ] T048 CVE gate: `dependencyCheckAggregate` — no critical/high vulnerabilities (constitution II; blocks merge)
 - [ ] T049 Performance verification: score entry ≤100ms (SC-002), stats ≤1s @ 500 sessions (SC-005), cold start <2s, history ≤2s (SC-004)
+- [ ] T049a SC-001 timing verification: record a complete archery session end-to-end (new session → enter scores for all ends → complete) and measure elapsed time; must be ≤3 minutes on a mid-range device. Document result in PR description.
 - [ ] T050 APK gate: `assembleRelease` (R8) ≤15MB (constitution constraint), install + smoke test on Android 8.0+ device (FR-013, SC-006)
 - [ ] T051 Final governance review: TDD evidence in commit history (test-first), constitution compliance, `AGENTS.md`/docs accurate — before merge to `develop`
 
