@@ -111,6 +111,11 @@ class RoomSessionRepository(
 
     override suspend fun deleteSession(sessionId: String) {
         val entity = sessionDao.getById(sessionId) ?: return
+        val endIds = endDao.getBySession(sessionId).map { it.id }
+        if (endIds.isNotEmpty()) {
+            arrowDao.deleteForEnds(endIds)
+        }
+        endDao.deleteForSession(sessionId)
         sessionDao.deleteById(sessionId)
         outbox.enqueue(
             userId = entity.userId,
