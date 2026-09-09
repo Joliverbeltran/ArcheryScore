@@ -87,6 +87,21 @@ class FakeAuthRepository(
     override val currentUserId: Flow<String?> = _currentUserId
 
     override suspend fun requireUserId(): String = checkNotNull(userId)
+
+    override suspend fun signUp(email: String, password: String) =
+        com.archeryscore.app.domain.repository.AuthResult.Success
+
+    override suspend fun signIn(email: String, password: String) =
+        com.archeryscore.app.domain.repository.AuthResult.Success
+
+    override suspend fun restore() =
+        com.archeryscore.app.domain.repository.AuthResult.Success
+
+    override suspend fun signOut(): com.archeryscore.app.domain.repository.AuthResult {
+        userId = null
+        _currentUserId.value = null
+        return com.archeryscore.app.domain.repository.AuthResult.Success
+    }
 }
 
 class FakePreferencesRepository : PreferencesRepository {
