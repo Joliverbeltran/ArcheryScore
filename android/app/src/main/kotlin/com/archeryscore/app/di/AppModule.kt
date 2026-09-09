@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.archeryscore.app.BuildConfig
 import com.archeryscore.app.data.auth.DefaultAuthRepository
+import com.archeryscore.app.data.auth.SupabaseAuthRepository
 import com.archeryscore.app.data.local.AppDatabase
 import com.archeryscore.app.data.local.dao.ArrowDao
 import com.archeryscore.app.data.local.dao.EndDao
@@ -12,6 +13,7 @@ import com.archeryscore.app.data.local.dao.PreferencesDao
 import com.archeryscore.app.data.local.dao.SessionDao
 import com.archeryscore.app.data.local.dao.SyncWriteDao
 import com.archeryscore.app.data.prefs.DataStorePreferencesRepository
+import com.archeryscore.app.data.repository.DefaultStatsRepository
 import com.archeryscore.app.data.repository.RoomSessionRepository
 import com.archeryscore.app.data.sync.DisabledRemoteDataSource
 import com.archeryscore.app.data.sync.OutboxSyncStatusRepository
@@ -22,12 +24,15 @@ import com.archeryscore.app.data.sync.SyncRunner
 import com.archeryscore.app.domain.repository.AuthRepository
 import com.archeryscore.app.domain.repository.PreferencesRepository
 import com.archeryscore.app.domain.repository.SessionRepository
+import com.archeryscore.app.domain.repository.StatsRepository
 import com.archeryscore.app.domain.repository.SyncStatusRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import javax.inject.Singleton
@@ -72,8 +77,24 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAuthRepository(prefs: DataStorePreferencesRepository): AuthRepository =
-        DefaultAuthRepository(prefs)
+    fun provideSupabaseClient(): SupabaseClient? {
+        val url = BuildConfig.SUPABASE_URL
+        val key = BuildConfig.SUPABASE_ANON_KEY
+        if (url.isBlank() || key.isBlank()) return null
+        return createSupabaseClient(url, key) {
+            install(Postgrest)
+            install(Auth)
+        }
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(
+        prefs: DataStorePreferencesRepository,
+        supabase: SupabaseClient?,
+    ): AuthRepository =
+        if (supabase != null) SupabaseAuthRepository(supabase, prefs)
+        else DefaultAuthRepository(prefs)
 
     @Provides
     @Singleton
@@ -91,15 +112,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideRemote(): SessionRemoteDataSource {
-        val url = BuildConfig.SUPABASE_URL
-        val key = BuildConfig.SUPABASE_ANON_KEY
-        if (url.isBlank() || key.isBlank()) return DisabledRemoteDataSource()
-        val client = createSupabaseClient(url, key) {
-            install(Postgrest)
-        }
-        return SupabaseRemoteDataSource(client)
-    }
+    fun provideRemote(
+        supabase: SupabaseClient?,
+    ): SessionRemoteDataSource =
+        if (supabase != null) SupabaseRemoteDataSource(supabase)
+        else DisabledRemoteDataSource()
 
     @Provides
     @Singleton
@@ -122,4 +139,9 @@ object AppModule {
     @Singleton
     fun providePreferencesRepository(prefs: DataStorePreferencesRepository): PreferencesRepository =
         prefs
+
+    @Provides
+    @Singleton
+    fun provideStatsRepository(sessionRepository: SessionRepository): StatsRepository =
+        DefaultStatsRepository(sessionRepository)
 }

@@ -2,62 +2,62 @@ package com.archeryscore.app.ui.stats
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.archeryscore.app.domain.model.Session
-import com.archeryscore.app.domain.model.SessionTotals
 import com.archeryscore.app.domain.repository.AuthRepository
-import com.archeryscore.app.domain.repository.SessionRepository
+import com.archeryscore.app.domain.repository.StatsRepository
+import com.archeryscore.app.domain.repository.StatsSnapshot
 import com.archeryscore.app.domain.usecase.DisciplineStats
 import com.archeryscore.app.domain.usecase.StatsAggregate
-import com.archeryscore.app.domain.usecase.StatsCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import java.time.Instant
 import javax.inject.Inject
 
 data class StatsUiState(
     val loading: Boolean = true,
     val aggregate: StatsAggregate = StatsAggregate(0, 0, 0, null, 0, 0),
     val byDiscipline: List<DisciplineStats> = emptyList(),
+    val needsMoreData: Boolean = false,
 )
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class StatsViewModel @Inject constructor(
-    private val sessionRepository: SessionRepository,
+    private val statsRepository: StatsRepository,
     authRepository: AuthRepository,
 ) : ViewModel() {
 
-    val uiState: StateFlow<StatsUiState> = authRepository.currentUserId
-        .flatMapLatest { userId ->
+    private val range = MutableStateFlow<Pair<Instant?, Instant?>?>(null)
+
+    fun setRange(from: Instant?, to: Instant?) {
+        range.value = from to to
+    }
+
+    val uiState: StateFlow<StatsUiState> = combine(authRepository.currentUserId, range) { userId, r ->
+        userId to r
+    }
+        .flatMapLatest { (userId, r) ->
             if (userId == null) {
                 flowOf(StatsUiState(loading = false))
             } else {
-                sessionRepository.observeSessions(userId).flatMapLatest { list ->
-                    flow {
-                        val sessions = list.map { it.session }
-                        val totals = buildMap {
-                            sessions.forEach { s ->
-                                getTotals(s.id.toString())?.let { put(s.id.toString(), it) }
-                            }
-                        }
-                        emit(
-                            StatsUiState(
-                                loading = false,
-                                aggregate = StatsCalculator.aggregate(sessions, totals),
-                                byDiscipline = StatsCalculator.byDiscipline(sessions, totals),
-                            )
+                statsRepository.observeStats(userId, r?.first, r?.second)
+                    .map { snapshot: StatsSnapshot ->
+                        StatsUiState(
+                            loading = false,
+                            aggregate = snapshot.aggregate,
+                            byDiscipline = snapshot.byDiscipline,
+                            needsMoreData = snapshot.needsMoreData,
                         )
                     }
-                }
             }
         }
         .catch { emit(StatsUiState(loading = false)) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, StatsUiState())
-
-    private suspend fun getTotals(sessionId: String): SessionTotals? =
-        sessionRepository.getTotals(sessionId)
 }
