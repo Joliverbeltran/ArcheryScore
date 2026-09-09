@@ -57,6 +57,8 @@ fun SessionDetailScreen(
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var confirmDelete by remember { mutableStateOf(false) }
+    val exportError = stringResource(R.string.export_error)
+    val shareTitle = stringResource(R.string.share_title)
 
     Column(
         modifier = Modifier
@@ -88,9 +90,9 @@ fun SessionDetailScreen(
                 onClick = {
                     scope.launch {
                         val success = runCatching {
-                            shareCsv(context, viewModel.exportCsv(detail), viewModel.sessionId)
+                            shareCsv(context, viewModel.exportCsv(detail), viewModel.sessionId, shareTitle)
                         }.isSuccess
-                        if (!success) snackbar.showSnackbar(context.getString(R.string.export_error))
+                        if (!success) snackbar.showSnackbar(exportError)
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -151,7 +153,7 @@ private fun EndRow(end: EndWithArrows) {
     }
 }
 
-private fun shareCsv(context: android.content.Context, csv: String, sessionId: String) {
+private fun shareCsv(context: android.content.Context, csv: String, sessionId: String, shareTitle: String) {
     val dir = File(context.cacheDir, "exports").apply { mkdirs() }
     val file = File(dir, "session-$sessionId.csv")
     file.writeText(csv, Charsets.UTF_8)
@@ -161,5 +163,5 @@ private fun shareCsv(context: android.content.Context, csv: String, sessionId: S
         putExtra(Intent.EXTRA_STREAM, uri)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-    context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_title)))
+    context.startActivity(Intent.createChooser(intent, shareTitle))
 }

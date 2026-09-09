@@ -2,7 +2,7 @@
     <string name="app_name">ArcheryScore</string>
 
     <string name="nav_start">Start</string>
-    <string name="nav_history">History</string>
+    <string name="nav_history">Recent</string>
     <string name="nav_stats">Stats</string>
 
     <string name="new_session">New session</string>
@@ -18,7 +18,6 @@
 
     <string name="ten_zone">Ten zone (0–10)</string>
     <string name="five_zone">Five zone (0–5)</string>
-    <string name="select_discipline">Select discipline</string>
     <string name="olympic_recurve">Olympic recurve</string>
     <string name="traditional_recurve">Traditional recurve</string>
     <string name="barebow">Barebow</string>

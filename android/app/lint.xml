@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- ktor-utils references java.lang.management for JVM debugging only; safe on Android. -->
+    <issue id="InvalidPackage">
+        <ignore regexp=".*ktor-utils.*"/>
+    </issue>
+</lint>

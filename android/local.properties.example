@@ -1,4 +1,7 @@
-sdk.dir=/home/oliver/Android/Sdk
-# Supabase project credentials (constitution II: never commit these)
-NEXT_PUBLIC_SUPABASE_URL=https://xkqnlibgfzfzvdkuqnbn.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_ZyfbUezo2Heq1E_3nBdTqg_W_W8nDVk
+# SDK location (Android Studio default; uncomment and adjust)
+# sdk.dir=/home/$USER/Android/Sdk
+
+# Supabase credentials for the integration test environment (T021/T034).
+# Keep this file out of version control; real values are never committed.
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
