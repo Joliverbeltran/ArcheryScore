@@ -30,7 +30,7 @@ The app is developed strictly with **Test-Driven Development** (TDD), ships as a
 | Background sync | WorkManager 2.11.0+ |
 | Backend / source of truth | Supabase (PostgreSQL + GoTrue Auth + PostgREST) via supabase-kt BOM 3.8.0 |
 | HTTP | Ktor 3.4.0 (OkHttp engine) |
-| Build | Gradle 9.4.1+, AGP 9.2.0, Gradle Kotlin DSL + version catalog |
+| Build | Gradle 9.4.1+, AGP 9.2.0 (built-in Kotlin), Gradle Kotlin DSL + version catalog |
 | Testing | JUnit 5, MockK, Turbine, Compose UI tests, Android instrumented tests |
 
 **Platform targets**: `minSdk 26` (Android 8.0), `targetSdk 36`, `compileSdk 37`.
@@ -254,8 +254,11 @@ The migration `supabase/migrations/0001_init.sql` creates the `sessions`, `ends`
 
 ## Troubleshooting
 
+**`org.jetbrains.kotlin.android` plugin is deprecated / AGP 9 built-in Kotlin**
+AGP 9.0 moved Kotlin compilation into the Android Gradle plugin itself. The classic `org.jetbrains.kotlin.android` plugin is **not** applied in this project, and the temporary opt-out flags `android.builtInKotlin=false` / `android.newDsl=false` have been removed (the opt-out is dropped in AGP 10). Don't re-add them unless a third-party plugin forces the classic setup.
+
 **`KSP/AGP mismatch`**
-Keep the KSP version aligned with AGP 9.2.0 (see the note in `specs/001-archery-score/research.md`).
+For AGP 9 built-in Kotlin, use KSP ≥ 2.3.6 and Hilt ≥ 2.59 (this project uses KSP 2.3.11 / Hilt 2.60.1). The Compose and kotlinx-serialization compiler plugins are applied normally alongside built-in Kotlin.
 
 **Compose fails with a compileSdk warning**
 Compose 1.12 requires compileSdk 37. Install the platform:
