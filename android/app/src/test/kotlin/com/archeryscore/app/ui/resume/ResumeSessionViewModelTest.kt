@@ -76,6 +76,32 @@ class ResumeSessionViewModelTest {
     }
 
     @Test
+    fun `completing an active session clears activeSessionId`() = runTest(dispatcher.scheduler) {
+        val active = Session(
+            userId = "test-user",
+            date = java.time.Instant.now(),
+            roundType = RoundType.TEN_ZONE,
+            distanceM = 70,
+            discipline = Discipline.OLYMPIC_RECURVE,
+            endCount = 6,
+            arrowsPerEnd = 3,
+            status = SessionStatus.ACTIVE,
+            createdAt = java.time.Instant.now(),
+            updatedAt = java.time.Instant.now(),
+        )
+        repo.createSession(active)
+
+        val vm = ResumeSessionViewModel(repo, prefs, auth)
+        advanceUntilIdle()
+        assertEquals(active.id.toString(), vm.uiState.value.activeSessionId)
+
+        repo.completeSession(active.id.toString())
+        advanceUntilIdle()
+
+        assertNull(vm.uiState.value.activeSessionId)
+    }
+
+    @Test
     fun `creating a session exposes its id and marks active`() = runTest(dispatcher.scheduler) {
         val vm = ResumeSessionViewModel(repo, prefs, auth)
         advanceUntilIdle()

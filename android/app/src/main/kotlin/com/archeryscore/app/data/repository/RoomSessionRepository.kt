@@ -1,5 +1,7 @@
 package com.archeryscore.app.data.repository
 
+import android.util.Log
+import com.archeryscore.app.BuildConfig
 import com.archeryscore.app.data.local.dao.ArrowDao
 import com.archeryscore.app.data.local.dao.EndDao
 import com.archeryscore.app.data.local.dao.SessionDao
@@ -17,10 +19,14 @@ import com.archeryscore.app.domain.repository.EndWithArrows
 import com.archeryscore.app.domain.repository.SessionDetail
 import com.archeryscore.app.domain.repository.SessionListItem
 import com.archeryscore.app.domain.repository.SessionRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
+import java.util.UUID
 
 class RoomSessionRepository(
     private val sessionDao: SessionDao,
@@ -42,20 +48,32 @@ class RoomSessionRepository(
             }
         }
 
-    override fun observeSessionDetail(sessionId: String): Flow<SessionDetail?> =
-        combine(
-            sessionDao.observeById(sessionId),
-            endDao.observeBySession(sessionId),
-        ) { sessionEntity, ends ->
-            val sessionEntityLocal = sessionEntity ?: return@combine null
-            val endIds = ends.map { it.id }
-            if (endIds.isEmpty()) {
-                Materialize(sessionEntityLocal, emptyList(), emptyList())
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun observeSessionDetail(sessionId: String): Flow<SessionDetail?> {
+        val endsFlow = endDao.observeBySession(sessionId)
+        val arrowsFlow = endsFlow.flatMapLatest { ends ->
+            if (ends.isEmpty()) {
+                flowOf(emptyList())
             } else {
-                val arrows = arrowDao.getForEnds(endIds)
-                Materialize(sessionEntityLocal, ends, arrows)
+                arrowDao.observeForEnds(ends.map { it.id })
             }
         }
+        return combine(
+            sessionDao.observeById(sessionId),
+            endsFlow,
+            arrowsFlow,
+        ) { sessionEntity, ends, arrows ->
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "observeSessionDetail[$sessionId] ends=${ends.size} " +
+                    "arrows=${arrows.size} perEnd=${ends.map { end ->
+                        val count = arrows.count { it.endId == end.id }
+                        "end${end.endNumber}:$count"
+                    }}")
+            }
+            val sessionEntityLocal = sessionEntity ?: return@combine null
+            Materialize(sessionEntityLocal, ends, arrows)
+        }
+    }
 
     private fun Materialize(
         sessionEntity: com.archeryscore.app.data.local.entity.SessionEntity,
@@ -83,6 +101,12 @@ class RoomSessionRepository(
 
     override suspend fun getActiveSession(userId: String): Session? =
         sessionDao.getActive(userId)?.let(Mapper::sessionFromEntity)
+
+    override fun observeActiveSession(userId: String): Flow<Session?> =
+        sessionDao.observeAll(userId).map { sessions ->
+            sessions.firstOrNull { it.status == SessionStatus.ACTIVE.name }
+                ?.let(Mapper::sessionFromEntity)
+        }
 
     override suspend fun createSession(session: Session): Session {
         val entity = Mapper.sessionToEntity(session)
@@ -142,12 +166,17 @@ class RoomSessionRepository(
         newEndNumber: Int,
     ): End {
         val end = End(
+            id = arrows.firstOrNull()?.endId ?: UUID.randomUUID(),
             sessionId = session.id,
             endNumber = newEndNumber,
             createdAt = Instant.now(),
         )
         endDao.upsert(Mapper.endToEntity(end))
         arrowDao.upsertAll(arrows.map(Mapper::arrowToEntity))
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "saveEnd end=$end arrowsToSave=${arrows.size} " +
+                "withScores=${arrows.map { it.score }}")
+        }
         val now = Instant.now()
         val updated = session.copy(updatedAt = now)
         sessionDao.upsert(Mapper.sessionToEntity(updated))
@@ -195,6 +224,10 @@ class RoomSessionRepository(
             arrowsShot = arrows.size,
             endsShot = ends.size,
         )
+    }
+
+    private companion object {
+        const val TAG = "ArcheryScore"
     }
 }
 

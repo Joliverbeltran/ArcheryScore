@@ -38,6 +38,8 @@ interface SessionRepository {
 
     suspend fun getActiveSession(userId: String): Session?
 
+    fun observeActiveSession(userId: String): Flow<Session?>
+
     suspend fun createSession(session: Session): Session
 
     suspend fun completeSession(sessionId: String)

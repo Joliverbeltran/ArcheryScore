@@ -39,8 +39,9 @@ class ScoreValidatorTest {
     }
 
     @Test
-    fun `zero score is rejected`() {
-        assertFalse(ScoreValidator.isValid(0, RoundType.TEN_ZONE))
+    fun `zero score is accepted as miss`() {
+        assertTrue(ScoreValidator.isValid(0, RoundType.TEN_ZONE))
+        assertTrue(ScoreValidator.isValid(0, RoundType.FIVE_ZONE))
     }
 
     @Test

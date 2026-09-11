@@ -9,6 +9,7 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import java.io.IOException
 
 class SupabaseAuthRepository(
@@ -18,7 +19,10 @@ class SupabaseAuthRepository(
 
     private val _currentUserId = MutableStateFlow<String?>(null)
 
-    override val currentUserId: Flow<String?> = _currentUserId
+    override val currentUserId: Flow<String?> =
+        combine(_currentUserId, prefs.observeLocalUserId()) { supabaseId, localId ->
+            supabaseId ?: localId
+        }
 
     override suspend fun requireUserId(): String =
         supabase.auth.currentUserOrNull()?.id ?: prefs.ensureLocalUserId()

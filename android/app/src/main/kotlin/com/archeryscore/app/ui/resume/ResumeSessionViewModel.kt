@@ -42,14 +42,20 @@ class ResumeSessionViewModel @Inject constructor(
     private fun load() {
         viewModelScope.launch {
             val userId = authRepository.requireUserId()
-            val active = sessionRepository.getActiveSession(userId)
             val prefs = preferencesRepository.observePreferences(userId).first()
             _uiState.update {
                 it.copy(
                     loading = false,
-                    activeSessionId = active?.id?.toString(),
                     defaults = prefs,
                 )
+            }
+            sessionRepository.observeActiveSession(userId).collect { active ->
+                _uiState.update {
+                    it.copy(
+                        loading = false,
+                        activeSessionId = active?.id?.toString(),
+                    )
+                }
             }
         }
     }

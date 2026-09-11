@@ -1,5 +1,6 @@
 package com.archeryscore.app.ui.record
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,7 @@ import com.archeryscore.app.domain.repository.EndWithArrows
 import com.archeryscore.app.domain.repository.SessionDetail
 import com.archeryscore.app.domain.repository.SessionRepository
 import com.archeryscore.app.domain.usecase.EditScoreUseCase
+import com.archeryscore.app.domain.usecase.SessionCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +44,7 @@ class ActiveSessionViewModel @Inject constructor(
                 Arrow(
                     endId = endId,
                     arrowNumber = n,
-                    score = 10,
+                    score = current.session.roundType.maxScore,
                     editedAt = now,
                 )
             }
@@ -57,28 +59,31 @@ class ActiveSessionViewModel @Inject constructor(
     fun recordArrow(arrow: Arrow, score: Int, isXRing: Boolean = false) {
         viewModelScope.launch {
             val current = detail.value ?: return@launch
-            runCatching {
+            try {
                 editScoreUseCase.edit(
                     sessionId = sessionId,
                     arrow = arrow,
                     newScore = score,
                     isXRing = isXRing,
                 )
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to record score for arrow ${arrow.id}", e)
             }
         }
     }
 
-    fun confirmCompletion() {
-        viewModelScope.launch {
-            sessionRepository.completeSession(sessionId)
-        }
+    companion object {
+        private const val TAG = "ActiveSessionVM"
+    }
+
+    suspend fun confirmCompletion() {
+        sessionRepository.completeSession(sessionId)
     }
 
     fun nextEndNumber(): Int = (detail.value?.ends?.size ?: 0) + 1
 
     fun isFullyScored(): Boolean {
         val d = detail.value ?: return false
-        return d.ends.size >= d.session.endCount &&
-            d.ends.all { it.arrows.size == d.session.arrowsPerEnd }
+        return SessionCalculator.isComplete(d.session, d.ends.flatMap { it.arrows })
     }
 }

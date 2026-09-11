@@ -14,6 +14,8 @@ import com.archeryscore.app.domain.repository.SessionListItem
 import com.archeryscore.app.domain.repository.SessionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import java.util.UUID
 
 class FakeSessionRepository : SessionRepository {
 
@@ -29,6 +31,12 @@ class FakeSessionRepository : SessionRepository {
 
     override suspend fun getActiveSession(userId: String): Session? =
         sessions.values.firstOrNull { it.userId == userId && it.status == SessionStatus.ACTIVE }
+
+    override fun observeActiveSession(userId: String): Flow<Session?> =
+        listFlow.map { items ->
+            items.firstOrNull { it.session.userId == userId && it.session.status == SessionStatus.ACTIVE }
+                ?.session
+        }
 
     override suspend fun createSession(session: Session): Session {
         sessions[session.id.toString()] = session
@@ -52,6 +60,7 @@ class FakeSessionRepository : SessionRepository {
 
     override suspend fun saveEnd(session: Session, arrows: List<Arrow>, newEndNumber: Int): End {
         val end = End(
+            id = arrows.firstOrNull()?.endId ?: UUID.randomUUID(),
             sessionId = session.id,
             endNumber = newEndNumber,
             createdAt = java.time.Instant.now(),
