@@ -14,7 +14,6 @@ class StatsFilterTest {
 
     private fun session(offsetDays: Long) = Session(
         id = java.util.UUID.randomUUID(),
-        userId = "u1",
         date = Instant.parse("2026-09-08T12:00:00Z").plusSeconds(offsetDays * 86400),
         roundType = RoundType.TEN_ZONE,
         distanceM = 18,

@@ -24,11 +24,11 @@
 
 **Purpose**: Remove cloud/sync tooling from the build so the app can no longer reach the network.
 
-- [ ] T001 Remove `supabase`, `ktor`, and `workmanager` entries from `android/gradle/libs.versions.toml`
-- [ ] T002 [P] Remove supabase/ktor/workmanager dependency blocks and `SUPABASE_URL`/`SUPABASE_ANON_KEY` `buildConfigField`s from `android/app/build.gradle.kts`
-- [ ] T003 [P] Remove `INTERNET` + `ACCESS_NETWORK_STATE` permissions and the WorkManager `InitializationProvider` from `android/app/src/main/AndroidManifest.xml`
-- [ ] T004 [P] Remove WorkManager `Configuration.Provider` + `SyncWorkerFactory` wiring from `android/app/src/main/kotlin/com/archeryscore/app/ArcheryScoreApp.kt` (revert to plain `Application` with `@HiltAndroidApp`)
-- [ ] T005 [P] Delete the `supabase/` cloud project directory at the repo root (config.toml, migrations)
+- [X] T001 Remove `supabase`, `ktor`, and `workmanager` entries from `android/gradle/libs.versions.toml`
+- [X] T002 [P] Remove supabase/ktor/workmanager dependency blocks and `SUPABASE_URL`/`SUPABASE_ANON_KEY` `buildConfigField`s from `android/app/build.gradle.kts`
+- [X] T003 [P] Remove `INTERNET` + `ACCESS_NETWORK_STATE` permissions and the WorkManager `InitializationProvider` from `android/app/src/main/AndroidManifest.xml`
+- [X] T004 [P] Remove WorkManager `Configuration.Provider` + `SyncWorkerFactory` wiring from `android/app/src/main/kotlin/com/archeryscore/app/ArcheryScoreApp.kt` (revert to plain `Application` with `@HiltAndroidApp`)
+- [X] T005 [P] Delete the `supabase/` cloud project directory at the repo root (config.toml, migrations)
 
 **Checkpoint**: Build no longer references Supabase/Ktor/WorkManager anywhere.
 
@@ -40,25 +40,25 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T006 Write failing instrumented test `MigrationTest` for `MIGRATION_1_2` (v1 DB with a sample session/ends/arrows + sync_writes → v2 preserves session rows, drops `sync_writes`/`prefs`) in `android/app/src/androidTest/kotlin/com/archeryscore/app/data/local/`
-- [ ] T007 [P] Delete sync layer package `data/sync/` (`SyncRunner.kt`, `SyncWorker.kt`, `SyncWorkerFactory.kt`, `SyncOutboxWriter.kt`, `OutboxSyncStatusRepository.kt`, `SupabaseRemoteDataSource.kt`, `Remote.kt`, any `SyncScheduler` file)
-- [ ] T008 [P] Delete `data/network/NetworkMonitor.kt`
-- [ ] T009 [P] Delete `data/auth/` (`SupabaseAuthRepository.kt`, `DefaultAuthRepository.kt`) and delete test `android/app/src/test/kotlin/com/archeryscore/app/data/auth/SupabaseAuthRepositoryTest.kt`
-- [ ] T010 [P] Delete `domain/model/SyncStatus.kt`; remove `SyncStatus` + `SyncStatusRepository` from `domain/repository/Repositories.kt` and `SessionListItem.syncStatus`
-- [ ] T011 [P] Remove `AuthRepository`, `AuthResult`, `AuthFailureReason` from `domain/repository/Repositories.kt`
-- [ ] T012 [P] Drop `userId` and `lastSyncedAt` from `domain/model/Session.kt`
-- [ ] T013 [P] Update `data/local/entity/Entities.kt`: remove `userId`/`lastSyncedAt` from `SessionEntity` and its `user_id` Index; delete `data/local/entity/SyncOutbox.kt` (`SyncWriteEntity`, `PreferencesEntity`)
-- [ ] T014 [P] Delete `data/local/dao/SyncAndPreferencesDao.kt` (`SyncWriteDao`, `PreferencesDao`) and `data/local/dao/ArrowDao.kt`/`EndDao.kt`/`SessionDao.kt` userId query params
-- [ ] T015 [P] Update `data/local/AppDatabase.kt`: entities = `[SessionEntity, EndEntity, ArrowEntity]`, `version = 2`, remove `syncWriteDao()`/`preferencesDao()`
-- [ ] T016 [P] Implement `MIGRATION_1_2` (DDL from `data-model.md`: recreate `sessions` without `user_id`/`last_synced_at`, copy rows, rename, recreate `index_sessions_date`, drop `sync_writes`/`prefs`) in `AppDatabase` and register via `.addMigrations()` in `build()`
-- [ ] T017 [P] Add corrupt-DB recovery (catch `CorruptionException` → delete DB file → rebuild empty) in `AppDatabase.build()` (FR-012)
-- [ ] T018 [P] `data/repository/RoomSessionRepository.kt`: remove `SyncOutboxWriter` dependency + outbox writes; drop `userId` params from DAO calls; `observeSessions()` returns `List<Session>`
-- [ ] T019 [P] `data/prefs/DataStorePreferencesRepository.kt`: remove `LOCAL_USER_ID`, `ensureLocalUserId()`, `observeLocalUserId()`; drop `userId` params
-- [ ] T020 [P] `data/mapper/Mapper.kt`: remove `syncStatus()`, `sessionToEntity(...userId...)` userId arg, `prefsToEntity()`/`prefsFromEntity()`
-- [ ] T021 [P] `di/AppModule.kt`: delete supabase/auth/sync providers (`provideSupabaseClient`, `provideAuthRepository`, `provideRemote`, `provideSyncRunner`, `provideSyncStatusRepository`, `provideSyncScheduler`, `provideOutboxWriter`, `provideSyncWriteDao`, `providePreferencesDao`); rewire `SessionRepository` without outbox
-- [ ] T022 [P] `domain/repository/Repositories.kt` interfaces: drop `userId` params on `SessionRepository.observeSessions/observeActiveSession/getActiveSession` and `PreferencesRepository.observePreferences/updatePreferences`
-- [ ] T023 [P] `data/repository/DefaultStatsRepository.kt`: drop `userId` param from `observeStats()`
-- [ ] T024 Update test doubles and all existing unit tests (`test/kotlin/com/archeryscore/app/test/TestDoubles.kt`, `RoomSessionRepositoryTest.kt`, `HistoryViewModelTest.kt`, `StatsViewModelTest.kt`, etc.) to the non-namespaced signatures; delete obsolete auth/sync mocks; `./gradlew :app:testDebugUnitTest` green
+- [X] T006 Write failing instrumented test `MigrationTest` for `MIGRATION_1_2` (v1 DB with a sample session/ends/arrows + sync_writes → v2 preserves session rows, drops `sync_writes`/`prefs`) in `android/app/src/androidTest/kotlin/com/archeryscore/app/data/local/`
+- [X] T007 [P] Delete sync layer package `data/sync/` (`SyncRunner.kt`, `SyncWorker.kt`, `SyncWorkerFactory.kt`, `SyncOutboxWriter.kt`, `OutboxSyncStatusRepository.kt`, `SupabaseRemoteDataSource.kt`, `Remote.kt`, any `SyncScheduler` file)
+- [X] T008 [P] Delete `data/network/NetworkMonitor.kt`
+- [X] T009 [P] Delete `data/auth/` (`SupabaseAuthRepository.kt`, `DefaultAuthRepository.kt`) and delete test `android/app/src/test/kotlin/com/archeryscore/app/data/auth/SupabaseAuthRepositoryTest.kt`
+- [X] T010 [P] Delete `domain/model/SyncStatus.kt`; remove `SyncStatus` + `SyncStatusRepository` from `domain/repository/Repositories.kt` and `SessionListItem.syncStatus`
+- [X] T011 [P] Remove `AuthRepository`, `AuthResult`, `AuthFailureReason` from `domain/repository/Repositories.kt`
+- [X] T012 [P] Drop `userId` and `lastSyncedAt` from `domain/model/Session.kt`
+- [X] T013 [P] Update `data/local/entity/Entities.kt`: remove `userId`/`lastSyncedAt` from `SessionEntity` and its `user_id` Index; delete `data/local/entity/SyncOutbox.kt` (`SyncWriteEntity`, `PreferencesEntity`)
+- [X] T014 [P] Delete `data/local/dao/SyncAndPreferencesDao.kt` (`SyncWriteDao`, `PreferencesDao`) and `data/local/dao/ArrowDao.kt`/`EndDao.kt`/`SessionDao.kt` userId query params
+- [X] T015 [P] Update `data/local/AppDatabase.kt`: entities = `[SessionEntity, EndEntity, ArrowEntity]`, `version = 2`, remove `syncWriteDao()`/`preferencesDao()`
+- [X] T016 [P] Implement `MIGRATION_1_2` (DDL from `data-model.md`: recreate `sessions` without `user_id`/`last_synced_at`, copy rows, rename, recreate `index_sessions_date`, drop `sync_writes`/`prefs`) in `AppDatabase` and register via `.addMigrations()` in `build()`
+- [X] T017 [P] Add corrupt-DB recovery (catch `CorruptionException` → delete DB file → rebuild empty) in `AppDatabase.build()` (FR-012)
+- [X] T018 [P] `data/repository/RoomSessionRepository.kt`: remove `SyncOutboxWriter` dependency + outbox writes; drop `userId` params from DAO calls; `observeSessions()` returns `List<Session>`
+- [X] T019 [P] `data/prefs/DataStorePreferencesRepository.kt`: remove `LOCAL_USER_ID`, `ensureLocalUserId()`, `observeLocalUserId()`; drop `userId` params
+- [X] T020 [P] `data/mapper/Mapper.kt`: remove `syncStatus()`, `sessionToEntity(...userId...)` userId arg, `prefsToEntity()`/`prefsFromEntity()`
+- [X] T021 [P] `di/AppModule.kt`: delete supabase/auth/sync providers (`provideSupabaseClient`, `provideAuthRepository`, `provideRemote`, `provideSyncRunner`, `provideSyncStatusRepository`, `provideSyncScheduler`, `provideOutboxWriter`, `provideSyncWriteDao`, `providePreferencesDao`); rewire `SessionRepository` without outbox
+- [X] T022 [P] `domain/repository/Repositories.kt` interfaces: drop `userId` params on `SessionRepository.observeSessions/observeActiveSession/getActiveSession` and `PreferencesRepository.observePreferences/updatePreferences`
+- [X] T023 [P] `data/repository/DefaultStatsRepository.kt`: drop `userId` param from `observeStats()`
+- [X] T024 Update test doubles and all existing unit tests (`test/kotlin/com/archeryscore/app/test/TestDoubles.kt`, `RoomSessionRepositoryTest.kt`, `HistoryViewModelTest.kt`, `StatsViewModelTest.kt`, etc.) to the non-namespaced signatures; delete obsolete auth/sync mocks; `./gradlew :app:testDebugUnitTest` green
 
 **Checkpoint**: Foundation ready — app compiles, unit tests pass, user story work can begin.
 
@@ -72,12 +72,12 @@
 
 ### Tests for User Story 1 (write FIRST, ensure they FAIL) ⚠️
 
-- [ ] T025 [P] [US1] Update `test/kotlin/com/archeryscore/app/ui/resume/ResumeSessionViewModelTest.kt`: session creation + preferences load must not depend on `AuthRepository` (fails to compile until T026)
+- [X] T025 [P] [US1] Update `test/kotlin/com/archeryscore/app/ui/resume/ResumeSessionViewModelTest.kt`: session creation + preferences load must not depend on `AuthRepository` (fails to compile until T026)
 
 ### Implementation for User Story 1
 
-- [ ] T026 [US1] `ui/resume/ResumeSessionViewModel.kt`: remove `AuthRepository`; call `preferencesRepository.observePreferences()` and `sessionRepository.observeActiveSession()` without userId; create `Session` without `userId`
-- [ ] T027 [US1] `ui/start/StartScreen.kt`: verify launch path has no sign-in/account/network gate and lands directly on the home/start screen (remove any legacy auth check)
+- [X] T026 [US1] `ui/resume/ResumeSessionViewModel.kt`: remove `AuthRepository`; call `preferencesRepository.observePreferences()` and `sessionRepository.observeActiveSession()` without userId; create `Session` without `userId`
+- [X] T027 [US1] `ui/start/StartScreen.kt`: verify launch path has no sign-in/account/network gate and lands directly on the home/start screen (remove any legacy auth check)
 
 **Checkpoint**: User Story 1 fully functional offline (record/finish/resume/edit/delete persist locally across restart).
 
@@ -91,13 +91,13 @@
 
 ### Tests for User Story 2 (write FIRST, ensure they FAIL) ⚠️
 
-- [ ] T028 [P] [US2] Update `test/kotlin/com/archeryscore/app/ui/history/HistoryViewModelTest.kt`: list loads via non-namespaced `observeSessions()` with no `AuthRepository`
+- [X] T028 [P] [US2] Update `test/kotlin/com/archeryscore/app/ui/history/HistoryViewModelTest.kt`: list loads via non-namespaced `observeSessions()` with no `AuthRepository`
 
 ### Implementation for User Story 2
 
-- [ ] T029 [US2] `ui/history/HistoryViewModel.kt`: remove `AuthRepository`/`currentUserId`; collect `sessionRepository.observeSessions()` directly
-- [ ] T030 [US2] `ui/history/HistoryScreen.kt`: delete the sync `AssistChip` and `SyncStatus` import (sync-status row)
-- [ ] T031 [P] [US2] Delete `sync_synced`/`sync_pending` strings from `res/values/strings.xml`
+- [X] T029 [US2] `ui/history/HistoryViewModel.kt`: remove `AuthRepository`/`currentUserId`; collect `sessionRepository.observeSessions()` directly
+- [X] T030 [US2] `ui/history/HistoryScreen.kt`: delete the sync `AssistChip` and `SyncStatus` import (sync-status row)
+- [X] T031 [P] [US2] Delete `sync_synced`/`sync_pending` strings from `res/values/strings.xml`
 
 **Checkpoint**: History and Detail work fully offline with no sync UI.
 
@@ -111,12 +111,12 @@
 
 ### Tests for User Story 3 (write FIRST, ensure they FAIL) ⚠️
 
-- [ ] T032 [P] [US3] Update `test/kotlin/com/archeryscore/app/ui/stats/StatsViewModelTest.kt`: stats derive from local-only `observeStats()` with `needsMoreData` for <3 sessions, no auth
+- [X] T032 [P] [US3] Update `test/kotlin/com/archeryscore/app/ui/stats/StatsViewModelTest.kt`: stats derive from local-only `observeStats()` with `needsMoreData` for <3 sessions, no auth
 
 ### Implementation for User Story 3
 
-- [ ] T033 [US3] `ui/stats/StatsViewModel.kt`: remove `AuthRepository`/`currentUserId`; call `statsRepository.observeStats(range)` without userId
-- [ ] T034 [US3] `data/repository/DefaultStatsRepository.kt`: confirm aggregation reads only `SessionRepository` (local Room); no remote/network path
+- [X] T033 [US3] `ui/stats/StatsViewModel.kt`: remove `AuthRepository`/`currentUserId`; call `statsRepository.observeStats(range)` without userId
+- [X] T034 [US3] `data/repository/DefaultStatsRepository.kt`: confirm aggregation reads only `SessionRepository` (local Room); no remote/network path
 
 **Checkpoint**: Statistics computed and accurate with no connectivity.
 
@@ -130,16 +130,16 @@
 
 ### Tests for User Story 4 (write FIRST, ensure they FAIL) ⚠️
 
-- [ ] T035 [P] [US4] Write `CsvImporterTest` in `test/kotlin/com/archeryscore/app/data/csv/`: round-trip property (export → import → export identical), per-field rejection rules from `contracts/csv-roundtrip.md`, atomicity on one bad row (zero writes), duplicate-`session_id` skip, empty-file/size guards
-- [ ] T036 [P] [US4] Write instrumented import test in `android/app/src/androidTest/kotlin/com/archeryscore/app/data/csv/`: import a previously exported file → sessions restored and visible (SC-009)
+- [x] T035 [P] [US4] Write `CsvImporterTest` in `test/kotlin/com/archeryscore/app/data/csv/`: round-trip property (export → import → export identical), per-field rejection rules from `contracts/csv-roundtrip.md`, atomicity on one bad row (zero writes), duplicate-`session_id` skip, empty-file/size guards
+- [x] T036 [P] [US4] Write instrumented import test in `android/app/src/androidTest/kotlin/com/archeryscore/app/data/csv/`: import a previously exported file → sessions restored and visible (SC-009)
 
 ### Implementation for User Story 4
 
-- [ ] T037 [P] [US4] Implement `CsvImporter` + row validation in `data/csv/CsvImporter.kt` (RFC 4180 parse, exact header, per-field rules, structured error with row/column/reason, atomic result) (FR-015)
-- [ ] T038 [US4] Add `importSessions()` (group rows by `session_id` → COMPLETE sessions + ends + arrows, skip IDs already present) to `SessionRepository`/`RoomSessionRepository` (FR-014, idempotent)
-- [ ] T039 [US4] Add "Import CSV" action to `ui/history/HistoryScreen.kt` via SAF `ACTION_OPEN_DOCUMENT` (`text/csv`) + result snackbar/dialog ("imported N, skipped M")
-- [ ] T040 [P] [US4] Add import strings to `res/values/strings.xml` (import action/title, success, skipped, error messages)
-- [ ] T041 [US4] UI sweep: grep `ui/`, `domain/`, `data/` for `sync|network|account|upload|pending` and remove every leftover indicator/messaging
+- [x] T037 [P] [US4] Implement `CsvImporter` + row validation in `data/csv/CsvImporter.kt` (RFC 4180 parse, exact header, per-field rules, structured error with row/column/reason, atomic result) (FR-015)
+- [x] T038 [US4] Add `importSessions()` (group rows by `session_id` → COMPLETE sessions + ends + arrows, skip IDs already present) to `SessionRepository`/`RoomSessionRepository` (FR-014, idempotent)
+- [x] T039 [US4] Add "Import CSV" action to `ui/history/HistoryScreen.kt` via SAF `ACTION_OPEN_DOCUMENT` (`text/csv`) + result snackbar/dialog ("imported N, skipped M")
+- [x] T040 [P] [US4] Add import strings to `res/values/strings.xml` (import action/title, success, skipped, error messages)
+- [x] T041 [US4] UI sweep: grep `ui/`, `domain/`, `data/` for `sync|network|account|upload|pending` and remove every leftover indicator/messaging
 
 **Checkpoint**: No sync/account/network surface remains; export and import round-trip succeed offline.
 
@@ -149,11 +149,11 @@
 
 **Purpose**: Governance amendment and end-to-end verification across all stories.
 
-- [ ] T042 [P] Amend `.specify/memory/constitution.md`: Principle III → On-Device-First Storage, Principle V → Local-Only Operation, drop Supabase/credentials rows + HTTPS-only constraint, update Sync Impact Report header, bump version `1.0.1 → 2.0.0` (FR-013, SC-008)
-- [ ] T043 [P] Re-align `.specify/templates/plan-template.md`, `spec-template.md`, `tasks-template.md` with on-device-first wording
-- [ ] T044 [P] Verify no network reachability per `quickstart.md`: merged manifest has no `INTERNET`/`ACCESS_NETWORK_STATE` (`./gradlew :app:processReleaseManifest`), no WorkManager jobs scheduled
-- [ ] T045 [P] Run `./gradlew :app:lintDebug` (zero errors) + dependency scan (no critical/high CVEs), perform unit + instrumented suite
-- [ ] T046 [P] Execute the `quickstart.md` validation checklist end-to-end (SC-001..SC-009, upgrade path v1→v2)
+- [x] T042 [P] Amend `.specify/memory/constitution.md`: Principle III → On-Device-First Storage, Principle V → Local-Only Operation, drop Supabase/credentials rows + HTTPS-only constraint, update Sync Impact Report header, bump version `1.0.1 → 2.0.0` (FR-013, SC-008)
+- [x] T043 [P] Re-align `.specify/templates/plan-template.md`, `spec-template.md`, `tasks-template.md` with on-device-first wording
+- [x] T044 [P] Verify no network reachability per `quickstart.md`: merged manifest has no `INTERNET`/`ACCESS_NETWORK_STATE` (`./gradlew :app:processReleaseManifest`), no WorkManager jobs scheduled
+- [x] T045 [P] Run `./gradlew :app:lintDebug` (zero errors) + dependency scan (no critical/high CVEs), perform unit + instrumented suite
+- [x] T046 [P] Execute the `quickstart.md` validation checklist end-to-end (SC-001..SC-009, upgrade path v1→v2)
 
 ---
 

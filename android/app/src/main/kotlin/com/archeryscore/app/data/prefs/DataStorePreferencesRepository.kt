@@ -24,11 +24,9 @@ class DataStorePreferencesRepository(
         val DEFAULT_DISTANCE_M = intPreferencesKey("default_distance_m")
         val DEFAULT_DISCIPLINE = stringPreferencesKey("default_discipline")
         val COUNT_X_RINGS = booleanPreferencesKey("count_x_rings_deeply")
-
-        val LOCAL_USER_ID = stringPreferencesKey("local_user_id")
     }
 
-    override fun observePreferences(userId: String): Flow<UserPreferences> =
+    override fun observePreferences(): Flow<UserPreferences> =
         store.data.map { prefs ->
             UserPreferences(
                 defaultRoundType = safeRoundType(prefs[Keys.DEFAULT_ROUND_TYPE]),
@@ -40,7 +38,7 @@ class DataStorePreferencesRepository(
             )
         }
 
-    override suspend fun updatePreferences(userId: String, prefs: UserPreferences) {
+    override suspend fun updatePreferences(prefs: UserPreferences) {
         store.edit { p ->
             p[Keys.DEFAULT_ROUND_TYPE] = prefs.defaultRoundType.name
             p[Keys.DEFAULT_END_COUNT] = prefs.defaultEndCount
@@ -49,22 +47,6 @@ class DataStorePreferencesRepository(
             p[Keys.DEFAULT_DISCIPLINE] = prefs.defaultDiscipline.name
             p[Keys.COUNT_X_RINGS] = prefs.countXRingsDeeply
         }
-    }
-
-    fun observeLocalUserId(): Flow<String?> =
-        store.data.map { it[Keys.LOCAL_USER_ID] }
-
-    suspend fun ensureLocalUserId(): String {
-        var current: String? = null
-        store.edit { p ->
-            current = p[Keys.LOCAL_USER_ID]
-            if (current == null) {
-                val id = java.util.UUID.randomUUID().toString()
-                p[Keys.LOCAL_USER_ID] = id
-                current = id
-            }
-        }
-        return current!!
     }
 
     private fun safeRoundType(name: String?): RoundType =

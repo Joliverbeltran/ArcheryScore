@@ -2,41 +2,43 @@ package com.archeryscore.app.test
 
 import com.archeryscore.app.domain.model.Arrow
 import com.archeryscore.app.domain.model.End
+import com.archeryscore.app.domain.model.ImportedSession
 import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionStatus
 import com.archeryscore.app.domain.model.SessionTotals
-import com.archeryscore.app.domain.model.SyncStatus
 import com.archeryscore.app.domain.model.UserPreferences
 import com.archeryscore.app.domain.repository.EndWithArrows
+import com.archeryscore.app.domain.repository.ImportResult
 import com.archeryscore.app.domain.repository.PreferencesRepository
 import com.archeryscore.app.domain.repository.SessionDetail
-import com.archeryscore.app.domain.repository.SessionListItem
 import com.archeryscore.app.domain.repository.SessionRepository
+import com.archeryscore.app.domain.repository.StatsRepository
+import com.archeryscore.app.domain.repository.StatsSnapshot
+import com.archeryscore.app.domain.usecase.DisciplineStats
+import com.archeryscore.app.domain.usecase.StatsAggregate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
 import java.util.UUID
 
 class FakeSessionRepository : SessionRepository {
 
     private val sessions = mutableMapOf<String, Session>()
     private val detailFlow = MutableStateFlow<SessionDetail?>(null)
-    private val listFlow = MutableStateFlow<List<SessionListItem>>(emptyList())
+    private val listFlow = MutableStateFlow<List<Session>>(emptyList())
 
-    override fun observeSessions(userId: String): Flow<List<SessionListItem>> = listFlow
+    override fun observeSessions(): Flow<List<Session>> = listFlow
 
     override fun observeSessionDetail(sessionId: String): Flow<SessionDetail?> = detailFlow
 
     override suspend fun getSession(sessionId: String): Session? = sessions[sessionId]
 
-    override suspend fun getActiveSession(userId: String): Session? =
-        sessions.values.firstOrNull { it.userId == userId && it.status == SessionStatus.ACTIVE }
+    override suspend fun getActiveSession(): Session? =
+        sessions.values.firstOrNull { it.status == SessionStatus.ACTIVE }
 
-    override fun observeActiveSession(userId: String): Flow<Session?> =
-        listFlow.map { items ->
-            items.firstOrNull { it.session.userId == userId && it.session.status == SessionStatus.ACTIVE }
-                ?.session
-        }
+    override fun observeActiveSession(): Flow<Session?> =
+        listFlow.map { items -> items.firstOrNull { it.status == SessionStatus.ACTIVE } }
 
     override suspend fun createSession(session: Session): Session {
         sessions[session.id.toString()] = session
@@ -77,6 +79,9 @@ class FakeSessionRepository : SessionRepository {
 
     override suspend fun getTotals(sessionId: String): SessionTotals? = null
 
+    override suspend fun importSessions(imported: List<ImportedSession>): ImportResult =
+        ImportResult(imported = imported.size, skipped = 0)
+
     fun installDetail(detail: SessionDetail?) {
         detailFlow.value = detail
     }
@@ -84,41 +89,26 @@ class FakeSessionRepository : SessionRepository {
     fun installedDetail(): SessionDetail? = detailFlow.value
 
     private fun refreshFlows() {
-        val items = sessions.values.map { SessionListItem(it, SyncStatus.PENDING) }
-        listFlow.value = items
-    }
-}
-
-class FakeAuthRepository(
-    var userId: String? = "test-user",
-) : com.archeryscore.app.domain.repository.AuthRepository {
-    private val _currentUserId = MutableStateFlow(userId)
-    override val currentUserId: Flow<String?> = _currentUserId
-
-    override suspend fun requireUserId(): String = checkNotNull(userId)
-
-    override suspend fun signUp(email: String, password: String) =
-        com.archeryscore.app.domain.repository.AuthResult.Success
-
-    override suspend fun signIn(email: String, password: String) =
-        com.archeryscore.app.domain.repository.AuthResult.Success
-
-    override suspend fun restore() =
-        com.archeryscore.app.domain.repository.AuthResult.Success
-
-    override suspend fun signOut(): com.archeryscore.app.domain.repository.AuthResult {
-        userId = null
-        _currentUserId.value = null
-        return com.archeryscore.app.domain.repository.AuthResult.Success
+        listFlow.value = sessions.values.toList()
     }
 }
 
 class FakePreferencesRepository : PreferencesRepository {
     private val prefs = MutableStateFlow(UserPreferences())
 
-    override fun observePreferences(userId: String): Flow<UserPreferences> = prefs
+    override fun observePreferences(): Flow<UserPreferences> = prefs
 
-    override suspend fun updatePreferences(userId: String, prefs: UserPreferences) {
+    override suspend fun updatePreferences(prefs: UserPreferences) {
         this.prefs.value = prefs
+    }
+}
+
+class FakeStatsRepository : StatsRepository {
+    private val stats = MutableStateFlow(StatsSnapshot(StatsAggregate(0, 0, 0, null, 0, 0), emptyList(), false))
+
+    override fun observeStats(from: Instant?, to: Instant?): Flow<StatsSnapshot> = stats
+
+    fun setSnapshot(snapshot: StatsSnapshot) {
+        stats.value = snapshot
     }
 }

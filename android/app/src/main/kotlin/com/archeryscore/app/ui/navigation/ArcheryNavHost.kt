@@ -71,8 +71,10 @@ fun ArcheryNavHost() {
             ) {
                 ActiveSessionScreen(
                     onFinished = {
-                        navController.navigate(Routes.HISTORY) {
-                            popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                        navController.navigate(Routes.START) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = false
+                            }
                         }
                     },
                     onBack = { navController.popBackStack() },

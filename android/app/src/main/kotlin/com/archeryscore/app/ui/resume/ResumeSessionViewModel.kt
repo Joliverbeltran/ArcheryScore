@@ -7,7 +7,6 @@ import com.archeryscore.app.domain.model.RoundType
 import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionStatus
 import com.archeryscore.app.domain.model.UserPreferences
-import com.archeryscore.app.domain.repository.AuthRepository
 import com.archeryscore.app.domain.repository.PreferencesRepository
 import com.archeryscore.app.domain.repository.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,7 +28,6 @@ data class ResumeUiState(
 class ResumeSessionViewModel @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val preferencesRepository: PreferencesRepository,
-    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ResumeUiState())
@@ -41,15 +39,14 @@ class ResumeSessionViewModel @Inject constructor(
 
     private fun load() {
         viewModelScope.launch {
-            val userId = authRepository.requireUserId()
-            val prefs = preferencesRepository.observePreferences(userId).first()
+            val prefs = preferencesRepository.observePreferences().first()
             _uiState.update {
                 it.copy(
                     loading = false,
                     defaults = prefs,
                 )
             }
-            sessionRepository.observeActiveSession(userId).collect { active ->
+            sessionRepository.observeActiveSession().collect { active ->
                 _uiState.update {
                     it.copy(
                         loading = false,
@@ -69,10 +66,8 @@ class ResumeSessionViewModel @Inject constructor(
         notes: String? = null,
     ) {
         viewModelScope.launch {
-            val userId = authRepository.requireUserId()
             val now = Instant.now()
             val session = Session(
-                userId = userId,
                 date = now,
                 roundType = roundType,
                 distanceM = distanceM,

@@ -5,7 +5,6 @@ import java.util.UUID
 
 data class Session(
     val id: UUID = UUID.randomUUID(),
-    val userId: String,
     val date: Instant,
     val roundType: RoundType,
     val distanceM: Int,
@@ -16,7 +15,6 @@ data class Session(
     val status: SessionStatus,
     val createdAt: Instant,
     val updatedAt: Instant,
-    val lastSyncedAt: Instant? = null,
 )
 
 data class End(

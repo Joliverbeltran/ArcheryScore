@@ -2,19 +2,14 @@ package com.archeryscore.app.domain.repository
 
 import com.archeryscore.app.domain.model.Arrow
 import com.archeryscore.app.domain.model.End
+import com.archeryscore.app.domain.model.ImportedSession
 import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionTotals
-import com.archeryscore.app.domain.model.SyncStatus
 import com.archeryscore.app.domain.model.UserPreferences
 import com.archeryscore.app.domain.usecase.DisciplineStats
 import com.archeryscore.app.domain.usecase.StatsAggregate
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
-
-data class SessionListItem(
-    val session: Session,
-    val syncStatus: SyncStatus,
-)
 
 data class SessionDetail(
     val session: Session,
@@ -30,15 +25,15 @@ data class EndWithArrows(
 
 interface SessionRepository {
 
-    fun observeSessions(userId: String): Flow<List<SessionListItem>>
+    fun observeSessions(): Flow<List<Session>>
 
     fun observeSessionDetail(sessionId: String): Flow<SessionDetail?>
 
     suspend fun getSession(sessionId: String): Session?
 
-    suspend fun getActiveSession(userId: String): Session?
+    suspend fun getActiveSession(): Session?
 
-    fun observeActiveSession(userId: String): Flow<Session?>
+    fun observeActiveSession(): Flow<Session?>
 
     suspend fun createSession(session: Session): Session
 
@@ -58,19 +53,22 @@ interface SessionRepository {
     ): Arrow
 
     suspend fun getTotals(sessionId: String): SessionTotals?
+
+    suspend fun importSessions(imported: List<ImportedSession>): ImportResult
 }
+
+data class ImportResult(
+    val imported: Int,
+    val skipped: Int,
+)
 
 interface PreferencesRepository {
-    fun observePreferences(userId: String): Flow<UserPreferences>
-    suspend fun updatePreferences(userId: String, prefs: UserPreferences)
-}
-
-interface SyncStatusRepository {
-    fun observeStatus(userId: String): Flow<SyncStatus>
+    fun observePreferences(): Flow<UserPreferences>
+    suspend fun updatePreferences(prefs: UserPreferences)
 }
 
 interface StatsRepository {
-    fun observeStats(userId: String, from: Instant?, to: Instant?): Flow<StatsSnapshot>
+    fun observeStats(from: Instant?, to: Instant?): Flow<StatsSnapshot>
 }
 
 data class StatsSnapshot(
@@ -78,26 +76,3 @@ data class StatsSnapshot(
     val byDiscipline: List<DisciplineStats>,
     val needsMoreData: Boolean,
 )
-
-interface AuthRepository {
-    val currentUserId: Flow<String?>
-    suspend fun requireUserId(): String
-    suspend fun signUp(email: String, password: String): AuthResult
-    suspend fun signIn(email: String, password: String): AuthResult
-    suspend fun restore(): AuthResult
-    suspend fun signOut(): AuthResult
-}
-
-sealed class AuthResult {
-    data object Success : AuthResult()
-    data class Failure(val reason: AuthFailureReason) : AuthResult()
-}
-
-enum class AuthFailureReason {
-    INVALID_EMAIL,
-    WEAK_PASSWORD,
-    INVALID_CREDENTIALS,
-    EMAIL_TAKEN,
-    NETWORK,
-    UNKNOWN,
-}

@@ -4,7 +4,6 @@ import com.archeryscore.app.domain.model.Discipline
 import com.archeryscore.app.domain.model.RoundType
 import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionStatus
-import com.archeryscore.app.test.FakeAuthRepository
 import com.archeryscore.app.test.FakePreferencesRepository
 import com.archeryscore.app.test.FakeSessionRepository
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +26,6 @@ class ResumeSessionViewModelTest {
 
     private val repo = FakeSessionRepository()
     private val prefs = FakePreferencesRepository()
-    private val auth = FakeAuthRepository()
     private val dispatcher = StandardTestDispatcher()
 
     @BeforeEach
@@ -43,7 +41,6 @@ class ResumeSessionViewModelTest {
     @Test
     fun `resumes active session when one exists`() = runTest(dispatcher.scheduler) {
         val active = Session(
-            userId = "test-user",
             date = java.time.Instant.now(),
             roundType = RoundType.TEN_ZONE,
             distanceM = 70,
@@ -56,7 +53,7 @@ class ResumeSessionViewModelTest {
         )
         repo.createSession(active)
 
-        val vm = ResumeSessionViewModel(repo, prefs, auth)
+        val vm = ResumeSessionViewModel(repo, prefs)
         advanceUntilIdle()
 
         val state = vm.uiState.value
@@ -66,7 +63,7 @@ class ResumeSessionViewModelTest {
 
     @Test
     fun `no active session means null id and defaults from preferences`() = runTest(dispatcher.scheduler) {
-        val vm = ResumeSessionViewModel(repo, prefs, auth)
+        val vm = ResumeSessionViewModel(repo, prefs)
         advanceUntilIdle()
 
         val state = vm.uiState.value
@@ -78,7 +75,6 @@ class ResumeSessionViewModelTest {
     @Test
     fun `completing an active session clears activeSessionId`() = runTest(dispatcher.scheduler) {
         val active = Session(
-            userId = "test-user",
             date = java.time.Instant.now(),
             roundType = RoundType.TEN_ZONE,
             distanceM = 70,
@@ -91,7 +87,7 @@ class ResumeSessionViewModelTest {
         )
         repo.createSession(active)
 
-        val vm = ResumeSessionViewModel(repo, prefs, auth)
+        val vm = ResumeSessionViewModel(repo, prefs)
         advanceUntilIdle()
         assertEquals(active.id.toString(), vm.uiState.value.activeSessionId)
 
@@ -103,7 +99,7 @@ class ResumeSessionViewModelTest {
 
     @Test
     fun `creating a session exposes its id and marks active`() = runTest(dispatcher.scheduler) {
-        val vm = ResumeSessionViewModel(repo, prefs, auth)
+        val vm = ResumeSessionViewModel(repo, prefs)
         advanceUntilIdle()
 
         vm.createSession(
@@ -122,13 +118,11 @@ class ResumeSessionViewModelTest {
         assertEquals(SessionStatus.ACTIVE, created!!.status)
         assertEquals(RoundType.FIVE_ZONE, created.roundType)
         assertEquals(30, created.distanceM)
-        assertEquals("test-user", created.userId)
     }
 
     @Test
     fun `session id from preferences flows into defaults`() = runTest(dispatcher.scheduler) {
         prefs.updatePreferences(
-            "test-user",
             com.archeryscore.app.domain.model.UserPreferences(
                 defaultRoundType = RoundType.FIVE_ZONE,
                 defaultEndCount = 4,
@@ -137,7 +131,7 @@ class ResumeSessionViewModelTest {
                 defaultDiscipline = Discipline.BAREBOW,
             ),
         )
-        val vm = ResumeSessionViewModel(repo, prefs, auth)
+        val vm = ResumeSessionViewModel(repo, prefs)
         advanceUntilIdle()
 
         val state = vm.uiState.value

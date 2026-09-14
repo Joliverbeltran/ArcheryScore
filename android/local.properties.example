@@ -1,7 +1,2 @@
 # SDK location (Android Studio default; uncomment and adjust)
 # sdk.dir=/home/$USER/Android/Sdk
-
-# Supabase credentials for the integration test environment (T021/T034).
-# Keep this file out of version control; real values are never committed.
-SUPABASE_URL=
-SUPABASE_ANON_KEY=

@@ -87,15 +87,15 @@
 
 ### Functional Requirements
 
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
+- **FR-001**: System MUST [specific capability, e.g., "persist all scores on-device in SQLite"]
+- **FR-002**: System MUST [specific capability, e.g., "export sessions to CSV offline"]
+- **FR-003**: Users MUST be able to [key interaction, e.g., "import a previously exported CSV"]
+- **FR-004**: System MUST [data requirement, e.g., "survive app restart without data loss"]
+- **FR-005**: System MUST [behavior, e.g., "reject malformed import rows with a structured error"]
 
 *Example of marking unclear requirements:*
 
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
+- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - local-only apps MUST NOT introduce a backend or network surface]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
 
 ### Key Entities *(include if feature involves data)*
@@ -112,8 +112,8 @@
 
 ### Measurable Outcomes
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
+- **SC-001**: [Measurable metric, e.g., "Users can export a session to CSV entirely offline in under 5 seconds"]
+- **SC-002**: [Measurable metric, e.g., "App launches and loads history with zero network requests"]
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
 
@@ -125,7 +125,7 @@
   chosen when the feature description did not specify certain details.
 -->
 
-- [Assumption about target users, e.g., "Users have stable internet connectivity"]
-- [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
-- [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
-- [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+- [Assumption about target users, e.g., "Users expect offline-first behavior with no account required"]
+- [Assumption about scope boundaries, e.g., "Cloud sync is out of scope; data stays on-device"]
+- [Assumption about data/environment, e.g., "SQLite (Room) is the single source of truth"]
+- [Dependency on existing system/service, e.g., "CSV export/import is the only data-exchange mechanism"]

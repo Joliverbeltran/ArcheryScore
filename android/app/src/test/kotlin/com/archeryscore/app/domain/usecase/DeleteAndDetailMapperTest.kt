@@ -22,7 +22,6 @@ class DeleteAndDetailMapperTest {
 
     private fun session() = Session(
         id = UUID.fromString("00000000-0000-0000-0000-00000000000b"),
-        userId = "u1",
         date = Instant.EPOCH,
         roundType = RoundType.TEN_ZONE,
         distanceM = 18,

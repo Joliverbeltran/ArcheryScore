@@ -1,15 +1,22 @@
 <!--
-Sync Impact Report
-==================
-Version change: 1.0.0 → 1.0.1 (PATCH: clarifications)
-Modified principles: N/A
+On-Device Impact Report
+=======================
+Version change: 1.0.1 → 2.0.0 (MAJOR: Supabase/sync principles removed and redefined;
+on-device-only architecture)
+Modified principles:
+  - Principle III: Supabase-First Storage → On-Device-First Storage
+  - Principle V: Offline Resilience → Local-Only Operation
 Modified sections:
-  - Principle IV: Min/Target SDK updated (26/34 → 26/36), Gradle 8.x → 9.x
-  - Technology Stack: Kotlin 2.0+ → 2.3.21, Gradle 8.x → 9.x, Target SDK 34 → 36,
-    added compileSdk 37 note
-Rationale: 2026 AndroidX/Play ecosystem requires compileSdk 37 (Compose BOM
-2026.08.00) and targetSdk 36 (Play policy Aug 2026). AGP 9 requires Gradle 9.x.
-Supersedes the plan.md CONSTITUTION_AMENDMENT_FOLLOWUP.
+  - Principle I: integration tests now target Room migrations and CSV round-trip
+    (no Supabase interactions)
+  - Principle II: removed Supabase credentials row
+  - Technology Stack: Storage now SQLite (Room 2.8.4); removed Supabase Kotlin SDK
+  - Constraints: removed HTTPS-only network constraint (no network surface remains)
+  - Integration tests: only local/instrumented; no sync/supabase tests
+Rationale: Feature 002 (local-sqlite-storage) removes all cloud/sync surface. The app
+is local-only: SQLite is the single source of truth, CSV export/import is the only
+data-exchange mechanism. Governed by FR-013, SC-008.
+Supersedes: plan.md CONSTITUTION_AMENDMENT_FOLLOWUP and prior Sync Impact Report.
 Templates requiring updates:
   - .specify/templates/plan-template.md ✅ aligned
   - .specify/templates/spec-template.md ✅ aligned
@@ -32,7 +39,7 @@ All production code MUST follow strict TDD (Red-Green-Refactor cycle):
 
 Test types required per feature:
 - **Unit tests**: For ViewModels, repositories, utilities, domain logic
-- **Integration tests**: For Supabase interactions, navigation flows
+- **Integration tests**: For Room migrations, DAOs, and CSV export/import round-trips
 - **UI tests**: For critical user journeys (score entry, session management)
 
 ### II. Security & Dependency Hygiene
@@ -41,11 +48,13 @@ All dependencies MUST be:
 - Updated to latest stable versions at project start and reviewed quarterly
 - Scanned for known CVEs using `dependencyCheck` or equivalent
 - Excluded from the build if any critical/high vulnerability exists with no patch
-- Supabase credentials MUST be stored in local properties, never in version control
 
-### III. Supabase-First Storage
+### III. On-Device-First Storage
 
-All persistent data MUST be stored in Supabase (PostgreSQL), which is the single source of truth. Local caching (e.g., Room) MAY be used for offline reads and write queueing, but all local writes MUST sync to Supabase when connectivity resumes. The app MUST NOT treat local cache as authoritative for data that has not been synced.
+All persistent data MUST be stored on-device in SQLite (via Room), which is the ONLY
+source of truth. There is no remote store and no sync queue. Data created on-device
+remains on-device. The app MUST NOT depend on any network service for reads, writes,
+or integrity.
 
 ### IV. Native Android with Modern Stack
 
@@ -58,13 +67,13 @@ The app MUST be built using:
 - **Gradle**: Kotlin DSL (build.gradle.kts)
 - **Min SDK**: 26 (Android 8.0) | **Target SDK**: 36 | **compileSdk**: 37
 
-### V. Offline Resilience
+### V. Local-Only Operation
 
-The app MUST handle network unavailability gracefully:
-- Score entry MUST work offline
-- Data MUST sync automatically when connectivity returns
-- User MUST see clear indicators of sync status
-- No data loss during connectivity interruptions
+The app MUST operate fully offline by design:
+- All score data lives exclusively in the on-device SQLite database
+- CSV export/import is the ONLY data-exchange mechanism
+- No account, upload, or sync status UI exists
+- No network permission is declared; the app MUST have no network surface
 
 ## Technology Stack & Constraints
 
@@ -74,7 +83,8 @@ The app MUST handle network unavailability gracefully:
 | UI Framework | Jetpack Compose | Latest BOM |
 | Architecture | MVVM + Clean Architecture | - |
 | DI | Hilt | Latest |
-| Storage | Supabase Kotlin SDK | Latest |
+| Storage | SQLite via Room | 2.8.4 |
+| CSV | Kotlin stdlib (RFC 4180) | - |
 | Build System | Gradle (Kotlin DSL) | 9.x |
 | Testing | JUnit5 + Mockk + Turbine | Latest |
 | Min SDK | 26 | - |
@@ -84,7 +94,7 @@ The app MUST handle network unavailability gracefully:
 **Constraints**:
 - APK size MUST NOT exceed 15MB
 - Cold start MUST be under 2 seconds on mid-range devices
-- All network calls MUST use HTTPS only
+- No network permissions (no `INTERNET`, no `ACCESS_NETWORK_STATE`)
 - No hardcoded strings in code; use string resources
 
 ## Development Workflow & Quality Gates
@@ -97,7 +107,7 @@ The app MUST handle network unavailability gracefully:
 
 ### Quality Gates (mandatory before merge)
 1. All unit tests pass
-2. All integration tests pass
+2. All local/instrumented integration tests pass
 3. Lint check passes with zero errors
 4. No dependency vulnerabilities (critical/high)
 5. Code review approved
@@ -106,7 +116,7 @@ The app MUST handle network unavailability gracefully:
 ### Commit Convention
 - Format: `type(scope): description`
 - Types: `feat`, `fix`, `test`, `refactor`, `chore`, `docs`
-- Scope: feature area (e.g., `score`, `session`, `sync`, `ui`)
+- Scope: feature area (e.g., `score`, `session`, `csv`, `ui`)
 
 ## Governance
 
@@ -118,4 +128,4 @@ This constitution supersedes all other development practices for the ArcheryScor
 - Compliance review is required before any release
 - For runtime development guidance, refer to AGENTS.md
 
-**Version**: 1.0.1 | **Ratified**: 2026-09-08 | **Last Amended**: 2026-09-08
+**Version**: 2.0.0 | **Ratified**: 2026-09-08 | **Last Amended**: 2026-09-14
