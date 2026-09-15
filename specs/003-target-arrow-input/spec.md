@@ -91,6 +91,7 @@ The archer relies on the app to translate a position on the target into a score.
 - **FR-013**: System MUST retain the chosen target type for the duration of a session and use it consistently for all placement in that session
 - **FR-014**: System MUST preserve existing sessions and their scores recorded with the previous numeric entry method, leaving history and statistics unaffected
 - **FR-015**: System MUST allow the user to correct a confirmed arrow within the current end before the end is completed (e.g., re-place it) with a clear confirmation step
+- **FR-016**: System MUST remember the last selected target type and pre-select it as the default when a new session is started
 
 ### Key Entities *(include if feature involves data)*
 
@@ -105,7 +106,7 @@ The archer relies on the app to translate a position on the target into a score.
 - **SC-001**: A user can record a full end (e.g., 6 arrows) using only tap, drag, and OK in under 45 seconds without typing any number
 - **SC-002**: 100% of OK-confirmed placements result in a valid stored score and require no numeric entry
 - **SC-003**: 100% of a verified test set of placements (inside ring, ring boundary, off-face miss) are scored according to standard archery rules
-- **SC-004**: Users can switch the target type with at most 2 interactions from the front menu, and all six options are always available
+- **SC-004**: At session setup, the user can choose the target type with at most 2 interactions from the front menu, and all six options are always available; the chosen type is fixed for the duration of the session (FR-013)
 - **SC-005**: 100% of sessions retain the selected target face consistently during arrow placement, and the running total updates instantly after each OK
 - **SC-006**: Existing sessions, history, and statistics are fully preserved — 0% regression after this change
 - **SC-007**: Users can correct a misplacement within a current end without losing previously stored arrows
@@ -118,4 +119,5 @@ The archer relies on the app to translate a position on the target into a score.
 - For triple targets, the tap location determines the spot: the spot whose face region contains the tap, or the nearest spot when the tap falls between or outside the three spots
 - The visual placement method replaces numeric entry for new score recording; correcting scores in already-completed historical sessions keeps the existing edit flow
 - The on-device score storage model (numeric arrow scores) is unchanged, so data recorded visually is compatible with history, statistics, and CSV export from prior specs
+- The target type is chosen at session setup and is not changeable mid-session; starting a new session re-opens the choice, pre-selected from the last-used type (FR-016)
 - Performance, accessibility, and UI/UX requirements from the original archery and local-storage specs are inherited and remain in force

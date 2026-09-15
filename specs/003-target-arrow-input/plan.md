@@ -8,7 +8,7 @@
 
 ## Summary
 
-Replace numeric score entry with **visual arrow placement** (FR-001..FR-015, SC-001..SC-007): during score entry the app shows an image/rendering of the selected target face; the user taps where the arrow landed, drags the marker to the exact spot, and taps **OK** to persist. After each OK the flow advances automatically to the next arrow in the same end (FR-006). Six target options are selectable in the session set-up ("front") menu — 122cm, 80cm, 60cm, 40cm, triple vertical, triple triangular (FR-002) — and the chosen target is displayed whenever arrows are being placed (FR-001). The score is **derived automatically** from the confirmed placement against the target's scoring rings (FR-007), with standard-archery conventions: ring-line touches score the higher value (FR-009), and placements outside all rings are misses = 0 (FR-008). Triple faces assign the arrow to the nearest spot (FR-010).
+Replace numeric score entry with **visual arrow placement** (FR-001..FR-016, SC-001..SC-007): during score entry the app shows an image/rendering of the selected target face; the user taps where the arrow landed, drags the marker to the exact spot, and taps **OK** to persist. After each OK the flow advances automatically to the next arrow in the same end (FR-006). Six target options are selectable in the session set-up ("front") menu — 122cm, 80cm, 60cm, 40cm, triple vertical, triple triangular (FR-002) — and the chosen target is displayed whenever arrows are being placed (FR-001). The score is **derived automatically** from the confirmed placement against the target's scoring rings (FR-007), with standard-archery conventions: ring-line touches score the higher value (FR-009), and placements outside all rings are misses = 0 (FR-008). Triple faces assign the arrow to the nearest spot (FR-010).
 
 Technical approach (see `research.md`): draw the target programmatically with Compose `Canvas` (no image assets — 10 equal-width WA zones in 5 colors, inner-10 "X"), place markers in a **normalized target coordinate space** (unit = face radius), and convert position → score with a pure domain function (`PlacementScorer`) that is exhaustively unit-tested (R-1..R-3). A new `sessions.target_type` column (Room v2→v3, `ALTER TABLE ADD COLUMN`, default `CM122`) plus a `default_target_type` DataStore preference persist the selection per session (FR-013) and as the default. The CSV export/import format gains a `target_type` column (10-col header) with backward-compatible import of the legacy 9-col files, preserving the 002 round-trip guarantee (SC-006). No new dependencies; TDD-first per constitution I.
 
@@ -18,11 +18,11 @@ Technical approach (see `research.md`): draw the target programmatically with Co
 
 **Primary Dependencies**:
 - KEEP: Jetpack Compose + Material 3 (Compose BOM 2026.08.00) — `androidx.compose.foundation.Canvas` for target rendering, `pointerInput` for tap/drag; Hilt; Room 2.8.4; DataStore Preferences; Compose Navigation; Coroutines; JUnit5 + Mockk + Turbine.
-- ADD: **none** (rendering is pure Compose Canvas; no image library, no new artifacts).
+- ADD: **none** (runtime dependencies unchanged; rendering is pure Compose Canvas. Test-only Compose UI-test artifacts (`androidx.compose.ui:ui-test-junit4` + `ui-test-manifest`) may be added to `androidTest` for instrumented Compose flow tests — see U4/quickstart.md).
 
 **Storage**: AndroidX Room (`archery_score.db`) schema version **3** — `sessions` gains `target_type TEXT NOT NULL DEFAULT 'CM122'` via `ALTER TABLE` in `MIGRATION_2_3`; `ends`/`arrows` unchanged (spec: placement is the input method, not a stored attribute). Preferences: `default_target_type` key added to DataStore; `UserPreferences.defaultTargetType = TargetType.CM122` default.
 
-**Testing**: JUnit5 + Mockk + Turbine unit tests for `PlacementScorer` (ring mapping, boundaries→higher value, misses, X-ring, triple nearest-spot, layout constants), CSV round-trip + legacy 9-col import, and preference defaults. Compose UI tests for tap→marker/OK→advance/cancel→discard flows. Instrumented tests for Room migration 2→3 data preservation.
+**Testing**: Unit tests (JUnit5 + Mockk + Turbine) for `PlacementScorer` (ring mapping, boundaries→higher value, misses, X-ring, triple nearest-spot, layout constants), CSV round-trip + legacy 9-col import, and preference defaults. Instrumented Compose UI tests (`ui-test-junit4`, `createComposeRule`) for tap→marker/OK→advance/cancel→discard flows, target-face fit/scaling on small/rotated screens, menu selection, and previous-arrow-marker visibility. Instrumented Room tests for migration 2→3 data preservation + accessibility lint clean (a11y content descriptions).
 
 **Target Platform**: Android 8.0+ (minSdk 26), targetSdk 36, compileSdk 37. Single user, single device.
 
@@ -92,20 +92,30 @@ android/
 │       │       │   │   └── UserPreferences.kt         # + defaultTargetType
 │       │       │   └── repository/Repositories.kt     # unchanged (targetType on Session model flows through)
 │       │       └── ui/
-│       │           ├── components/TargetFace.kt       # NEW Canvas renderer (single + triple layouts)
+│       │           ├── components/
+│       │           │   ├── TargetFace.kt         # NEW Canvas renderer (single + triple layouts, inset fit for small/rotated)
+│       │           │   └── TargetFaceFitTest.kt  # androidTest: inset/aspect-ratio fit on constrained containers
 │       │           ├── record/
 │       │           │   ├── TargetPlacementDialog.kt   # NEW: tap/drag/OK + auto-advance within an end
+│       │           │   ├── TargetPlacementFlowTest.kt # androidTest Compose: tap/drag/OK/advance/cancel/discard
+│       │           │   ├── TargetMarkersVisibleTest.kt # androidTest Compose: previous arrows remain visible (FR-012)
 │       │           │   ├── ActiveSessionScreen.kt     # arrow chip -> TargetPlacementDialog (replaces ScoreDialog)
 │       │           │   └── ActiveSessionViewModel.kt  # placement flow state (current arrow index, unconfirmed marker)
-│       │           └── start/StartScreen.kt           # TargetTypeDropdown added to session set-up menu
+│       │           └── start/
+│       │               ├── StartScreen.kt         # TargetTypeDropdown (UI only, state from StartViewModel)
+│       │               ├── StartViewModel.kt       # NEW Hilt VM: session creation with targetType + default_target_type pre-select (FR-016)
+│       │               └── StartScreenTargetTypeTest.kt # androidTest Compose: six-option list + pre-selected default
 │       ├── test/
 │       │   ├── PlacementScorerTest.kt                 # ring/boundary/miss/X/triple-spot unit tests
 │       │   ├── TripleLayoutTest.kt                    # spot-center constants, nearest-spot resolution
 │       │   ├── CsvRoundTripTargetTypeTest.kt          # 10-col round-trip + legacy 9-col import
-│       │   ├── UserPreferencesTargetTypeTest.kt       # default_target_type persistence
-│       │   └── TargetPlacementFlowTest.kt             # Compose UI: tap/drag/OK/advance/cancel/discard
+│       │   └── UserPreferencesTargetTypeTest.kt       # default_target_type persistence (FR-016)
 │       └── androidTest/
-│           └── RoomMigration23Test.kt                 # MIGRATION_2_3 preserves sessions/ends/arrows
+│           ├── RoomMigration23Test.kt                 # MIGRATION_2_3 preserves sessions/ends/arrows
+│           ├── TargetPlacementFlowTest.kt             # (see record/)
+│           ├── TargetMarkersVisibleTest.kt            # (see record/)
+│           ├── TargetFaceFitTest.kt                   # (see components/)
+│           └── StartScreenTargetTypeTest.kt           # (see start/)
 ├── gradle/
 ├── build.gradle.kts
 ├── settings.gradle.kts
@@ -115,7 +125,7 @@ specs/003-target-arrow-input/             # planning docs (this feature)
 specs/002-local-sqlite-storage/contracts/csv-roundtrip.md  # amended: 10-col format + legacy import
 ```
 
-**Structure Decision**: Unchanged single-module Android layout. The feature is a focused swap of the score-entry interaction plus a small cross-cutting persistence touch (`target_type` through Room, DataStore, Mapper, CSV). No new module is warranted; all new logic lives in `domain/model` (pure, heavily unit-tested) and `ui/record` + `ui/components` (Compose).
+**Structure Decision**: Unchanged single-module Android layout. The feature is a focused swap of the score-entry interaction plus a small cross-cutting persistence touch (`target_type` through Room, DataStore, Mapper, CSV). No new module is warranted; all new logic lives in `domain/model` (pure, heavily unit-tested) and `ui/record` + `ui/components` (Compose). Session creation state lives in a new Hilt `StartViewModel` (keeps `StartScreen` UI-only).
 
 ## Complexity Tracking
 

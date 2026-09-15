@@ -15,15 +15,18 @@ Prereqs and daily-combat commands for engineers working on this feature. Full TO
 ```bash
 cd android
 ./gradlew :app:testDebugUnitTest    # unit tests: PlacementScorer, TripleLayout, CSV round-trip, prefs
-./gradlew :app:lintDebug            # lint, zero errors
+./gradlew :app:lintDebug            # lint, zero errors (incl. Compose a11y)
 ./gradlew :app:assembleDebug        # build
-./gradlew :app:connectedAndroidTest # instrumented: Room migration 2→3, corruption, placement UI
+./gradlew :app:connectedAndroidTest # instrumented: Room migration 2→3, placement UI, target-face fit, menu, marker visibility
+# Note: Compose UI tests (TargetPlacementFlowTest, TargetFaceFitTest, StartScreenTargetTypeTest, TargetMarkersVisibleTest)
+# are instrumented under androidTest using ui-test-junit4 + createComposeRule; the migration test uses MigrationTestHelper.
 ```
 
 ## Verification checklist (maps to success criteria)
 
-- [ ] New session set-up shows the six target options; selection is remembered as the default next time (FR-002, SC-004, R-6)
+- [ ] New session set-up shows the six target options; selection is remembered as the default next time (FR-002, FR-016, SC-004, R-6)
 - [ ] Placement: tap → marker appears; drag → marker follows to exact spot; OK → score persists and advances to next arrow; all arrows of an end sequence (FR-003..FR-006, SC-001)
+- [ ] Full face reachable and accurately tappable on small and rotated screens (aspect-correct, inset-based fit)
 - [ ] Score correctness: verified placement set — inside ring, on ring boundary (higher value), off-face (miss 0), X on 10 — matches WA rules 100% (FR-007..FR-009, SC-003)
 - [ ] Triple faces: tap near each spot scores against that spot; gaps resolve to nearest spot; previously placed arrows stay visible (FR-010, FR-012, SC-005)
 - [ ] Cancel/back discards an unconfirmed marker; nothing persists until OK (FR-005)
