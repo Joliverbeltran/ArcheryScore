@@ -38,7 +38,6 @@ class ActiveSessionViewModelTest {
         arrowsPerEnd: Int = 3,
     ) = Session(
         id = UUID.fromString("00000000-0000-0000-0000-000000000001"),
-        userId = "test-user",
         date = Instant.EPOCH,
         roundType = RoundType.TEN_ZONE,
         distanceM = 18,
@@ -115,7 +114,7 @@ class ActiveSessionViewModelTest {
     }
 
     @Test
-    fun `completion only allowed when all ends fully scored`() = runTest(dispatcher.scheduler) {
+    fun `completion requires end goal to be reached`() = runTest(dispatcher.scheduler) {
         val s = session(endCount = 2, arrowsPerEnd = 3)
         val partially = vm(s, ends = listOf(end(s.id, 1, listOf(10, 9, 8))))
         advanceUntilIdle()
@@ -130,6 +129,21 @@ class ActiveSessionViewModelTest {
         )
         advanceUntilIdle()
         assertTrue(full.isFullyScored())
+    }
+
+    @Test
+    fun `completion allowed when enough ends recorded despite an unscorable end`() = runTest(dispatcher.scheduler) {
+        val s = session(endCount = 2, arrowsPerEnd = 3)
+        val vm = vm(
+            s,
+            ends = listOf(
+                end(s.id, 1, emptyList()),
+                end(s.id, 2, listOf(10, 9, 8)),
+                end(s.id, 3, listOf(7, 8, 9)),
+            ),
+        )
+        advanceUntilIdle()
+        assertTrue(vm.isFullyScored())
     }
 
     @Test

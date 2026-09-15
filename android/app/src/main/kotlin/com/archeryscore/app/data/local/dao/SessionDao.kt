@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SessionDao {
 
-    @Query("SELECT * FROM sessions WHERE user_id = :userId ORDER BY date DESC")
-    fun observeAll(userId: String): Flow<List<SessionEntity>>
+    @Query("SELECT * FROM sessions ORDER BY date DESC")
+    fun observeAll(): Flow<List<SessionEntity>>
 
     @Query("SELECT * FROM sessions WHERE id = :id")
     fun observeById(id: String): Flow<SessionEntity?>
@@ -19,8 +19,8 @@ interface SessionDao {
     @Query("SELECT * FROM sessions WHERE id = :id")
     suspend fun getById(id: String): SessionEntity?
 
-    @Query("SELECT * FROM sessions WHERE user_id = :userId AND status = 'ACTIVE' LIMIT 1")
-    suspend fun getActive(userId: String): SessionEntity?
+    @Query("SELECT * FROM sessions WHERE status = 'ACTIVE' LIMIT 1")
+    suspend fun getActive(): SessionEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(session: SessionEntity)
@@ -31,12 +31,12 @@ interface SessionDao {
     @Query("DELETE FROM sessions WHERE id = :id")
     suspend fun deleteById(id: String)
 
-    @Query("SELECT COUNT(*) FROM sessions WHERE user_id = :userId AND status = 'COMPLETE'")
-    suspend fun countCompleted(userId: String): Int
+    @Query("SELECT COUNT(*) FROM sessions WHERE status = 'COMPLETE'")
+    suspend fun countCompleted(): Int
 
-    @Query("SELECT * FROM sessions WHERE user_id = :userId AND status = 'COMPLETE' ORDER BY date")
-    suspend fun allCompletedAsc(userId: String): List<SessionEntity>
+    @Query("SELECT * FROM sessions WHERE status = 'COMPLETE' ORDER BY date")
+    suspend fun allCompletedAsc(): List<SessionEntity>
 
-    @Query("SELECT COUNT(*) FROM sessions WHERE user_id = :userId AND status = 'ACTIVE'")
-    suspend fun countActive(userId: String): Int
+    @Query("SELECT COUNT(*) FROM sessions WHERE status = 'ACTIVE'")
+    suspend fun countActive(): Int
 }

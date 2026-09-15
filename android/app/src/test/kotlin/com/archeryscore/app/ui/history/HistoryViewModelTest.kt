@@ -4,11 +4,8 @@ import com.archeryscore.app.domain.model.Discipline
 import com.archeryscore.app.domain.model.RoundType
 import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionStatus
-import com.archeryscore.app.domain.model.SyncStatus
 import com.archeryscore.app.domain.repository.EndWithArrows
 import com.archeryscore.app.domain.repository.SessionDetail
-import com.archeryscore.app.domain.repository.SessionListItem
-import com.archeryscore.app.test.FakeAuthRepository
 import com.archeryscore.app.test.FakeSessionRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,7 +27,6 @@ class HistoryViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val repo = FakeSessionRepository()
-    private val auth = FakeAuthRepository()
 
     @BeforeEach
     fun setUp() {
@@ -44,7 +40,6 @@ class HistoryViewModelTest {
 
     private fun session(offsetDays: Long) = Session(
         id = UUID.randomUUID(),
-        userId = "u1",
         date = Instant.EPOCH.plusSeconds(offsetDays * 86400),
         roundType = RoundType.TEN_ZONE,
         distanceM = 18,
@@ -62,28 +57,18 @@ class HistoryViewModelTest {
         val newer = session(2)
         runTestFactor(repo, older, newer)
 
-        val vm = HistoryViewModel(repo, auth)
+        val vm = HistoryViewModel(repo)
         dispatcher.scheduler.advanceUntilIdle()
 
         val state = vm.uiState.value
         assertEquals(2, state.sessions.size)
-        assertEquals(newer.id, state.sessions[0].session.id)
-        assertEquals(older.id, state.sessions[1].session.id)
+        assertEquals(newer.id, state.sessions[0].id)
+        assertEquals(older.id, state.sessions[1].id)
     }
 
     @Test
-    fun `sync status is surfaced on each item`() = runTest(dispatcher.scheduler) {
-        val s = session(1)
-        runTestFactor(repo, s)
-        val vm = HistoryViewModel(repo, auth)
-        dispatcher.scheduler.advanceUntilIdle()
-        assertEquals(SyncStatus.PENDING, vm.uiState.value.sessions.first().syncStatus)
-    }
-
-    @Test
-    fun `unknown state equals null userId yields empty list`() = runTest(dispatcher.scheduler) {
-        val noAuth = FakeAuthRepository(userId = null)
-        val vm = HistoryViewModel(repo, noAuth)
+    fun `empty repository yields empty session list`() = runTest(dispatcher.scheduler) {
+        val vm = HistoryViewModel(repo)
         dispatcher.scheduler.advanceUntilIdle()
         assertEquals(0, vm.uiState.value.sessions.size)
     }
@@ -118,7 +103,43 @@ class HistoryViewModelTest {
         assertNotNull(vm.sessionId)
     }
 
+    @Test
+    fun `importCsv reports imported and skipped counts`() = runTest(dispatcher.scheduler) {
+        val vm = HistoryViewModel(repo)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val sessionId = UUID.randomUUID().toString()
+        vm.importCsv(
+            CsvHeader +
+                "\r\n$sessionId,2026-09-08T09:15:00Z,18,OLYMPIC_RECURVE,TEN_ZONE,1,1,10,true",
+        )
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val message = vm.importMessage.value as ImportMessage.Success
+        assertEquals(1, message.imported)
+        assertEquals(0, message.skipped)
+    }
+
+    @Test
+    fun `importCsv reports validation error with row column and reason`() = runTest(dispatcher.scheduler) {
+        val vm = HistoryViewModel(repo)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.importCsv("session_id,date\nnot-a-date")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val message = vm.importMessage.value as ImportMessage.Failure
+        assertTrue(message.row > 0)
+        assertTrue(message.column.isNotEmpty())
+        assertTrue(message.reason.isNotEmpty())
+    }
+
     private suspend fun runTestFactor(repo: FakeSessionRepository, vararg sessions: Session) {
         sessions.forEach { repo.createSession(it) }
+    }
+
+    private companion object {
+        const val CsvHeader =
+            "session_id,date,distance_m,discipline,round_type,end_number,arrow_number,score,is_x_ring"
     }
 }

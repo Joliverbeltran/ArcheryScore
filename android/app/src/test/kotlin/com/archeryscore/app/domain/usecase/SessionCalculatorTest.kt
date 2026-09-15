@@ -45,7 +45,6 @@ class SessionCalculatorTest {
     @Test
     fun `session totals aggregate all ends`() {
         val session = Session(
-            userId = "u1",
             date = Instant.EPOCH,
             roundType = com.archeryscore.app.domain.model.RoundType.TEN_ZONE,
             distanceM = 18,
@@ -76,7 +75,6 @@ class SessionCalculatorTest {
     @Test
     fun `completion requires all ends shot`() {
         val session = Session(
-            userId = "u1",
             date = Instant.EPOCH,
             roundType = com.archeryscore.app.domain.model.RoundType.TEN_ZONE,
             distanceM = 18,
@@ -95,7 +93,6 @@ class SessionCalculatorTest {
     @Test
     fun `running total is proportional and never exceeds max`() {
         val session = Session(
-            userId = "u1",
             date = Instant.EPOCH,
             roundType = com.archeryscore.app.domain.model.RoundType.TEN_ZONE,
             distanceM = 70,

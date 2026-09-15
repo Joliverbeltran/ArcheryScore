@@ -1,61 +1,70 @@
 package com.archeryscore.app.data.repository
 
+import android.util.Log
+import com.archeryscore.app.BuildConfig
 import com.archeryscore.app.data.local.dao.ArrowDao
 import com.archeryscore.app.data.local.dao.EndDao
 import com.archeryscore.app.data.local.dao.SessionDao
-import com.archeryscore.app.data.local.dao.SyncWriteDao
+import com.archeryscore.app.data.local.entity.ArrowEntity
+import com.archeryscore.app.data.local.entity.EndEntity
 import com.archeryscore.app.data.mapper.Mapper
-import com.archeryscore.app.data.sync.SyncOutboxWriter
 import com.archeryscore.app.domain.model.Arrow
 import com.archeryscore.app.domain.model.End
+import com.archeryscore.app.domain.model.ImportedSession
 import com.archeryscore.app.domain.model.ScoreValidator
 import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionStatus
 import com.archeryscore.app.domain.model.SessionTotals
-import com.archeryscore.app.domain.model.SyncStatus
 import com.archeryscore.app.domain.repository.EndWithArrows
+import com.archeryscore.app.domain.repository.ImportResult
 import com.archeryscore.app.domain.repository.SessionDetail
-import com.archeryscore.app.domain.repository.SessionListItem
 import com.archeryscore.app.domain.repository.SessionRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.time.Instant
+import java.util.UUID
 
 class RoomSessionRepository(
     private val sessionDao: SessionDao,
     private val endDao: EndDao,
     private val arrowDao: ArrowDao,
-    private val syncWriteDao: SyncWriteDao,
-    private val outbox: SyncOutboxWriter,
 ) : SessionRepository {
 
-    override fun observeSessions(userId: String): Flow<List<SessionListItem>> =
-        combine(sessionDao.observeAll(userId), syncWriteDao.observePending(userId)) {
-                sessions, pending ->
-            val pendingIds = pending.map { it.entityId }.toSet()
-            sessions.map { entity ->
-                val session = Mapper.sessionFromEntity(entity)
-                val status = if (session.id.toString() in pendingIds) SyncStatus.PENDING
-                else SyncStatus.SYNCED
-                SessionListItem(session, status)
-            }
+    override fun observeSessions(): Flow<List<Session>> =
+        sessionDao.observeAll().map { sessions ->
+            sessions.map(Mapper::sessionFromEntity)
         }
 
-    override fun observeSessionDetail(sessionId: String): Flow<SessionDetail?> =
-        combine(
-            sessionDao.observeById(sessionId),
-            endDao.observeBySession(sessionId),
-        ) { sessionEntity, ends ->
-            val sessionEntityLocal = sessionEntity ?: return@combine null
-            val endIds = ends.map { it.id }
-            if (endIds.isEmpty()) {
-                Materialize(sessionEntityLocal, emptyList(), emptyList())
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun observeSessionDetail(sessionId: String): Flow<SessionDetail?> {
+        val endsFlow = endDao.observeBySession(sessionId)
+        val arrowsFlow = endsFlow.flatMapLatest { ends ->
+            if (ends.isEmpty()) {
+                flowOf(emptyList())
             } else {
-                val arrows = arrowDao.getForEnds(endIds)
-                Materialize(sessionEntityLocal, ends, arrows)
+                arrowDao.observeForEnds(ends.map { it.id })
             }
         }
+        return combine(
+            sessionDao.observeById(sessionId),
+            endsFlow,
+            arrowsFlow,
+        ) { sessionEntity, ends, arrows ->
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "observeSessionDetail[$sessionId] ends=${ends.size} " +
+                    "arrows=${arrows.size} perEnd=${ends.map { end ->
+                        val count = arrows.count { it.endId == end.id }
+                        "end${end.endNumber}:$count"
+                    }}")
+            }
+            val sessionEntityLocal = sessionEntity ?: return@combine null
+            Materialize(sessionEntityLocal, ends, arrows)
+        }
+    }
 
     private fun Materialize(
         sessionEntity: com.archeryscore.app.data.local.entity.SessionEntity,
@@ -81,49 +90,32 @@ class RoomSessionRepository(
     override suspend fun getSession(sessionId: String): Session? =
         sessionDao.getById(sessionId)?.let(Mapper::sessionFromEntity)
 
-    override suspend fun getActiveSession(userId: String): Session? =
-        sessionDao.getActive(userId)?.let(Mapper::sessionFromEntity)
+    override suspend fun getActiveSession(): Session? =
+        sessionDao.getActive()?.let(Mapper::sessionFromEntity)
+
+    override fun observeActiveSession(): Flow<Session?> =
+        sessionDao.observeAll().map { sessions ->
+            sessions.firstOrNull { it.status == SessionStatus.ACTIVE.name }
+                ?.let(Mapper::sessionFromEntity)
+        }
 
     override suspend fun createSession(session: Session): Session {
-        val entity = Mapper.sessionToEntity(session)
-        sessionDao.upsert(entity)
-        outbox.enqueue(
-            userId = entity.userId,
-            entityType = "session",
-            entityId = entity.id,
-            payload = PayloadSerializer.session(entity),
-        )
+        sessionDao.upsert(Mapper.sessionToEntity(session))
         return session
     }
 
     override suspend fun completeSession(sessionId: String) {
         val now = Instant.now()
         sessionDao.updateStatus(sessionId, SessionStatus.COMPLETE.name, now.toEpochMilli())
-        sessionDao.getById(sessionId)?.let { entity ->
-            outbox.enqueue(
-                userId = entity.userId,
-                entityType = "session",
-                entityId = entity.id,
-                payload = PayloadSerializer.session(entity),
-            )
-        }
     }
 
     override suspend fun deleteSession(sessionId: String) {
-        val entity = sessionDao.getById(sessionId) ?: return
         val endIds = endDao.getBySession(sessionId).map { it.id }
         if (endIds.isNotEmpty()) {
             arrowDao.deleteForEnds(endIds)
         }
         endDao.deleteForSession(sessionId)
         sessionDao.deleteById(sessionId)
-        outbox.enqueue(
-            userId = entity.userId,
-            entityType = "session",
-            entityId = entity.id,
-            payload = PayloadSerializer.deletion(entity.id),
-            operation = "DELETE",
-        )
     }
 
     override suspend fun resumeSessionDetail(sessionId: String): SessionDetail? =
@@ -142,21 +134,20 @@ class RoomSessionRepository(
         newEndNumber: Int,
     ): End {
         val end = End(
+            id = arrows.firstOrNull()?.endId ?: UUID.randomUUID(),
             sessionId = session.id,
             endNumber = newEndNumber,
             createdAt = Instant.now(),
         )
         endDao.upsert(Mapper.endToEntity(end))
         arrowDao.upsertAll(arrows.map(Mapper::arrowToEntity))
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "saveEnd end=$end arrowsToSave=${arrows.size} " +
+                "withScores=${arrows.map { it.score }}")
+        }
         val now = Instant.now()
         val updated = session.copy(updatedAt = now)
         sessionDao.upsert(Mapper.sessionToEntity(updated))
-        outbox.enqueue(
-            userId = session.userId,
-            entityType = "end",
-            entityId = end.id.toString(),
-            payload = PayloadSerializer.end(end, arrows),
-        )
         return end
     }
 
@@ -176,12 +167,6 @@ class RoomSessionRepository(
         arrowDao.upsert(Mapper.arrowToEntity(updatedArrow))
         val now = Instant.now()
         sessionDao.upsert(Mapper.sessionToEntity(session.copy(updatedAt = now)))
-        outbox.enqueue(
-            userId = session.userId,
-            entityType = "arrow",
-            entityId = updatedArrow.id.toString(),
-            payload = PayloadSerializer.arrow(updatedArrow),
-        )
         return updatedArrow
     }
 
@@ -196,35 +181,48 @@ class RoomSessionRepository(
             endsShot = ends.size,
         )
     }
-}
 
-internal object PayloadSerializer {
-    fun session(entity: com.archeryscore.app.data.local.entity.SessionEntity): String =
-        // V1 compact JSON of remote-equivalent row.
-        listOf(
-            entity.id, entity.userId, entity.date.toString(), entity.roundType,
-            entity.distanceM.toString(), entity.discipline, entity.endCount.toString(),
-            entity.arrowsPerEnd.toString(), entity.notes.orEmpty(), entity.status,
-            entity.createdAt.toString(), entity.updatedAt.toString(),
-            entity.lastSyncedAt?.toString().orEmpty(),
-        ).joinToString("|")
-
-    fun end(
-        end: End,
-        arrows: List<Arrow>,
-    ): String = buildString {
-        append(end.sessionId).append('|').append(end.id).append('|').append(end.endNumber)
-        for (arrow in arrows) {
-            append('|').append(arrow.id).append('|').append(arrow.endId)
-                .append('|').append(arrow.arrowNumber).append('|').append(arrow.score)
-                .append('|').append(arrow.isXRing).append('|').append(arrow.editedAt.toEpochMilli())
+    override suspend fun importSessions(imported: List<ImportedSession>): ImportResult {
+        var importedCount = 0
+        var skippedCount = 0
+        for (item in imported) {
+            val sessionId = item.session.id.toString()
+            if (sessionDao.getById(sessionId) != null) {
+                skippedCount++
+                continue
+            }
+            val now = Instant.now()
+            val session = item.session.copy(updatedAt = now)
+            sessionDao.upsert(Mapper.sessionToEntity(session))
+            for (end in item.ends) {
+                val endId = UUID.randomUUID()
+                endDao.upsert(
+                    EndEntity(
+                        id = endId.toString(),
+                        sessionId = sessionId,
+                        endNumber = end.endNumber,
+                        createdAt = session.date.toEpochMilli(),
+                    ),
+                )
+                for (arrow in end.arrows) {
+                    arrowDao.upsert(
+                        ArrowEntity(
+                            id = UUID.randomUUID().toString(),
+                            endId = endId.toString(),
+                            arrowNumber = arrow.arrowNumber,
+                            score = arrow.score,
+                            isXRing = arrow.isXRing,
+                            editedAt = now.toEpochMilli(),
+                        ),
+                    )
+                }
+            }
+            importedCount++
         }
+        return ImportResult(imported = importedCount, skipped = skippedCount)
     }
 
-    fun arrow(arrow: Arrow): String = listOf(
-        arrow.id, arrow.endId, arrow.arrowNumber.toString(), arrow.score.toString(),
-        arrow.isXRing.toString(), arrow.editedAt.toEpochMilli().toString(),
-    ).joinToString("|")
-
-    fun deletion(id: String): String = "DELETE|$id"
+    private companion object {
+        const val TAG = "ArcheryScore"
+    }
 }

@@ -2,6 +2,8 @@ package com.archeryscore.app.ui.record
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +45,7 @@ import com.archeryscore.app.domain.model.Arrow
 import com.archeryscore.app.domain.model.RoundType
 import com.archeryscore.app.domain.repository.EndWithArrows
 import com.archeryscore.app.domain.repository.SessionDetail
+import kotlinx.coroutines.launch
 
 @Composable
 fun ActiveSessionScreen(
@@ -53,6 +57,7 @@ fun ActiveSessionScreen(
     val detail by viewModel.detail.collectAsState()
     var editing by remember { mutableStateOf<Arrow?>(null) }
     var confirmFinish by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val content = detail
     if (content == null) {
@@ -120,8 +125,10 @@ fun ActiveSessionScreen(
             confirmButton = {
                 TextButton(onClick = {
                     confirmFinish = false
-                    viewModel.confirmCompletion()
-                    onFinished()
+                    scope.launch {
+                        viewModel.confirmCompletion()
+                        onFinished()
+                    }
                 }) { Text(stringResource(R.string.confirm)) }
             },
             dismissButton = {
@@ -143,7 +150,7 @@ private fun SessionHeader(detail: SessionDetail) {
             Text(s.disciplineLabel(), style = MaterialTheme.typography.bodyMedium)
         }
         Text(
-            stringResource(R.string.end_format, s.endCount, s.endCount),
+            stringResource(R.string.end_format, detail.ends.size, s.endCount),
             style = MaterialTheme.typography.bodyMedium,
         )
     }
@@ -166,6 +173,7 @@ private fun TotalRow(detail: SessionDetail) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun EndCard(
     end: EndWithArrows,
@@ -176,7 +184,7 @@ private fun EndCard(
         Column(modifier = Modifier.padding(12.dp)) {
             Text(stringResource(R.string.arrow_format, end.end.endNumber), style = MaterialTheme.typography.titleSmall)
             Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 end.arrows.forEach { arrow ->
                     FilterChip(
                         selected = false,
@@ -189,6 +197,7 @@ private fun EndCard(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ScoreDialog(
     arrow: Arrow,
@@ -208,7 +217,7 @@ private fun ScoreDialog(
         title = { Text(stringResource(R.string.score_arrow, arrow.arrowNumber)) },
         text = {
             Column {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     (0..max).forEach { value ->
                         FilterChip(
                             selected = score == value,

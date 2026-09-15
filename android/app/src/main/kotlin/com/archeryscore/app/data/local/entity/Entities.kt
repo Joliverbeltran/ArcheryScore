@@ -7,11 +7,10 @@ import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "sessions",
-    indices = [Index("user_id"), Index("date")],
+    indices = [Index("date")],
 )
 data class SessionEntity(
     @PrimaryKey val id: String,
-    @ColumnInfo(name = "user_id") val userId: String,
     val date: Long,
     @ColumnInfo(name = "round_type") val roundType: String,
     @ColumnInfo(name = "distance_m") val distanceM: Int,
@@ -22,7 +21,6 @@ data class SessionEntity(
     val status: String,
     @ColumnInfo(name = "created_at") val createdAt: Long,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
-    @ColumnInfo(name = "last_synced_at") val lastSyncedAt: Long?,
 )
 
 @Entity(

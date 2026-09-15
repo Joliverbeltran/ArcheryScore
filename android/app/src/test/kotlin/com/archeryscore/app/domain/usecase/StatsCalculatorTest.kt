@@ -19,7 +19,6 @@ class StatsCalculatorTest {
         status: SessionStatus = SessionStatus.COMPLETE,
     ) = Session(
         id = UUID.fromString(id),
-        userId = "u1",
         date = Instant.EPOCH,
         roundType = RoundType.TEN_ZONE,
         distanceM = 18,

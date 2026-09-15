@@ -55,8 +55,8 @@ fun StartScreen(
     var discipline by remember { mutableStateOf(state.defaults.defaultDiscipline) }
     var roundType by remember { mutableStateOf(state.defaults.defaultRoundType) }
     var distance by remember { mutableIntStateOf(state.defaults.defaultDistanceM) }
-    var endCount by remember { mutableIntStateOf(6) }
-    var arrowsPerEnd by remember { mutableIntStateOf(3) }
+    var endCount by remember { mutableIntStateOf(state.defaults.defaultEndCount) }
+    var arrowsPerEnd by remember { mutableIntStateOf(state.defaults.defaultArrowsPerEnd) }
     var notes by remember { mutableStateOf("") }
 
     Column(

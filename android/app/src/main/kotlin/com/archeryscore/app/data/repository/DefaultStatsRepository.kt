@@ -14,20 +14,20 @@ class DefaultStatsRepository(
     private val sessionRepository: SessionRepository,
 ) : StatsRepository {
 
-    override fun observeStats(userId: String, from: Instant?, to: Instant?): Flow<StatsSnapshot> =
-        sessionRepository.observeSessions(userId).map { items ->
-            val sessions = items.map { it.session }
+    override fun observeStats(from: Instant?, to: Instant?): Flow<StatsSnapshot> =
+        sessionRepository.observeSessions().map { sessions ->
+            val completed = sessions
                 .filter { it.status == SessionStatus.COMPLETE }
                 .let { StatsFilter.withinRange(it, from, to) }
             val totals = buildMap {
-                sessions.forEach { s ->
+                completed.forEach { s ->
                     sessionRepository.getTotals(s.id.toString())?.let { put(s.id.toString(), it) }
                 }
             }
             StatsSnapshot(
-                aggregate = StatsCalculator.aggregate(sessions, totals),
-                byDiscipline = StatsCalculator.byDiscipline(sessions, totals),
-                needsMoreData = StatsFilter.needsMoreData(sessions.size),
+                aggregate = StatsCalculator.aggregate(completed, totals),
+                byDiscipline = StatsCalculator.byDiscipline(completed, totals),
+                needsMoreData = StatsFilter.needsMoreData(completed.size),
             )
         }
 }

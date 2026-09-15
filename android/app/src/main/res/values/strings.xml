@@ -44,12 +44,13 @@
     <string name="empty_history">No sessions yet</string>
     <string name="status_active">Active</string>
     <string name="status_complete">Complete</string>
-    <string name="sync_pending">Pending sync</string>
-    <string name="sync_synced">Synced</string>
 
     <string name="export_csv">Export CSV</string>
     <string name="share_title">Share session</string>
     <string name="export_error">Could not export session</string>
+    <string name="import_csv">Import CSV</string>
+    <string name="import_result">Imported %1$d, skipped %2$d</string>
+    <string name="import_result_error">Import error row %1$d, column %2$s: %3$s</string>
     <string name="delete_session">Delete session</string>
     <string name="delete_dialog_title">Delete session?</string>
     <string name="delete_dialog_message">This removes the session and all of its arrows.</string>
