@@ -120,4 +120,5 @@ The archer relies on the app to translate a position on the target into a score.
 - The visual placement method replaces numeric entry for new score recording; correcting scores in already-completed historical sessions keeps the existing edit flow
 - The on-device score storage model (numeric arrow scores) is unchanged, so data recorded visually is compatible with history, statistics, and CSV export from prior specs
 - The target type is chosen at session setup and is not changeable mid-session; starting a new session re-opens the choice, pre-selected from the last-used type (FR-016)
+- The target face always renders the standard 10-zone WA layout (5 colour bands, 10 rings); the session's configured scoring type (TEN_ZONE vs FIVE_ZONE) determines how placement maps to a value — it does not change the displayed geometry. FIVE_ZONE treats each colour band as a single value (1–5, outer-to-inner); the X ring is only valid for TEN_ZONE
 - Performance, accessibility, and UI/UX requirements from the original archery and local-storage specs are inherited and remain in force

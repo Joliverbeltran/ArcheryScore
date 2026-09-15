@@ -40,20 +40,26 @@ Given normalized `r = √(x²+y²)` measured from the resolved face center, zone
 | `r ≤ 0.5·w` and 10-zone | `score = 10`, `isX = true` (inner-10 "X"; X requires `TEN_ZONE`, consistent with `ScoreValidator`) |
 | 5-zone | `isX` always `false` |
 
+*Note (FIVE_ZONE)*: With `maxScore = 5` and `w = 1/5`, the formula yields **5 colour bands** (values 1–5, outer-to-inner), i.e. each 10-zone ring pair maps to one band value. The boundary→higher convention applies per band. `isX` is **never** valid for FIVE_ZONE (mirrors `ScoreValidator.canBeXRing`). The rendered face is the **same 10-zone WA graphic** for both scoring types — only the scoring interpretation differs (see spec Assumption).
+
 Triple faces: the resolved face is the **nearest spot center** to the tap point (FR-010); scoring rules above are then applied relative to that center.
 
 ## Persisted output
 
 Confirmed arrows remain the existing `(score: Int, isXRing: Boolean)`; **no placement coordinates are stored** (spec Assumption). All existing downstream behavior (totals, history, stats, CSV) is unchanged.
 
-## Error/edge handling (FR-015)
+## Correction within the current end (FR-015)
 
-- Correction within the current end: tapping a chip re-opens placement for that arrow; OK re-persists and continues through the remaining arrows of the end (heritage editing-on-completed-sessions + confirmation stays per feature 001).
-- Dialog interruption (rotation/back): pending marker is transient; nothing is persisted until OK (FR-005). Confirmed arrows remain intact.
+- **Correction mode**: Tapping a **confirmed** arrow chip of the current end opens the placement dialog in *correction mode*, targeting that arrow slot.
+- **Dialog UX**: The header displays "Correct arrow X/N" and the arrow's currently stored result ("Score: 9 · X" or "Score: 0") so the previous value is unambiguously visible.
+- **No auto-fill**: The pending marker starts **unplaced** (no score badge) — the user must tap/drag to the desired new position. This deliberate empty start plus the labeled header is the **clear confirmation step** required by FR-015 and prevents accidental silent overwrites.
+- **OK action**: Resolves the new position, re-persists `(score, isX)` via `EditScoreUseCase` (replacing the previous value), then **auto-advances** through the remaining arrows of the end (same behavior as normal placement).
+- **Cancel/back**: Discards the pending marker and leaves the original stored value **unchanged**.
+- **Dialog interruption** (rotation/back): pending marker is transient; nothing is persisted until OK (FR-005). Confirmed arrows remain intact.
 
 ## Acceptance link
 
 - `PlacementScorerTest`: every ring value for 10- and 5-zone, every boundary line (higher value), `r ≥ 1` miss, X/`r ≤ 0.5w`, 5-zone never-X.
 - `TripleLayoutTest`: spot-center constants; nearest-spot for taps in-face, on boundaries, and in gaps.
-- `TargetPlacementFlowTest` (Compose UI): tap → marker; drag → marker moves; OK → persisted + advances; cancel → discarded; off-face tap shows miss; last arrow closes.
+- `TargetPlacementFlowTest` (Compose UI): tap → marker; drag → marker moves; OK → persisted + advances; cancel → discarded; off-face tap shows miss; last arrow closes; **correction mode** re-entry shows prior value + unplaced marker, OK replaces and advances, cancel preserves prior value (FR-015/T022).
 - Behavior tests: visual placement produces correct session totals; existing numeric sessions still edit fine (FR-014).

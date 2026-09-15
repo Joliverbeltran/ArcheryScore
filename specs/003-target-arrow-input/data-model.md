@@ -73,6 +73,7 @@ Output `PlacementResult`:
 
 Rules (unit-tested, exhaustive):
 - single face: center `(0,0)`; `w = 1/maxScore`; `score = maxScore − floor(r/w)` clamped `≥1`; `miss` when `r ≥ 1`; X when 10-zone and `r ≤ 0.5·w`.
+- FIVE_ZONE (`maxScore = 5`): the formula yields **5 colour bands** (each of width `R/5`, values 1–5 outer→inner — one band = two 10-zone rings); `isX` is **always** `false` (consistent with `ScoreValidator`). The rendered face is the same 10-zone WA graphic for both scoring types.
 - triple faces: resolve nearest spot center among the 3 centers (D-3), then apply the single-face rules relative to that spot center; `miss` when the point is beyond that spot's `r ≥ 1`.
 - boundary (line touch) scores the higher inner value automatically (WA line-in-higher-zone convention) — no epsilon needed.
 

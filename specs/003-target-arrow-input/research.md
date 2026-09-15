@@ -16,6 +16,8 @@ Resolves every technical unknown in the plan's Technical Context. Format: **Deci
 - **Rationale**: The published rulebooks (World Archery Book 2 §7.2.2, indoor Book 3) define zones as equal width "measured from the centre of the gold" — so score resolution is **purely a function of normalized radius** `r = distance/faceRadius`. That makes `PlacementScorer` a small, exhaustively testable pure function with zero graphics coupling.
 - **Alternatives considered**: ring diameters from a lookup table per face (rejected — equal-width formula is authoritative, simpler, and size-independent); approximating by linear zones without X-ring inner-ten (rejected — breaks X scoring already supported by the app).
 
+> **R-2 addendum (FIVE_ZONE)**: The physical face is **always** the standard 10-zone WA graphic (5 colour bands, 10 rings); the scoring type only changes value attribution. For `FIVE_ZONE` (maxScore 5, `w = R/5`) one colour band (two adjacent rings) maps to a single value 1–5 (outer→inner) via the same formula `score = maxScore − floor(r/w)` — no code divergence. X-ring never applies (mirrors `ScoreValidator.canBeXRing`).
+
 ## R-3: Boundary and line conventions
 
 - **Decision**: Ring dividing lines lie **within the higher-scoring zone** (WA rule). In normalized terms: score = `maxScore − floor(r / w)`, clamped to `≥1` — a point exactly on a ring boundary therefore falls into the higher (inner) value automatically (matches FR-009). Miss (score 0) when `r ≥ 1`. X when `r ≤ w/2` and scoring type allows it (10-zone only, consistent with existing `ScoreValidator`).
