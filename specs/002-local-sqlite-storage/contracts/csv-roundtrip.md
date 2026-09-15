@@ -2,6 +2,8 @@
 
 **Spec ref**: FR-009 (export), FR-014 (import), FR-015 (validation) | Constitution: on-device-only (amended)
 
+> **Amendment (feature 003-target-arrow-input)**: the export header is extended to 10 columns by inserting `target_type` after `round_type` (values: `CM122|CM80|CM60|CM40|TRIPLE_VERTICAL|TRIPLE_TRIANGULAR`). Import remains backward-compatible and still accepts this legacy 9-column header (rows default to `CM122`). All other rules and the round-trip identity are unchanged. Authoritative addition: `specs/003-target-arrow-input/contracts/storage.md`.
+
 The export format is **unchanged** from feature 001 (`specs/001-archery-score/contracts/csv-export.md`) so existing exports remain valid. The import contract below is the reverse operation: it consumes exactly what `CsvExporter.kt` emits.
 
 ## Export format (authoritative for import)
