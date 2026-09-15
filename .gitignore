@@ -1,0 +1,22 @@
+# Local secrets — never commit (constitution II)
+local.properties
+*.jks
+*.keystore
+keystore.properties
+.env
+
+# Build output
+android/build/
+android/app/build/
+android/.gradle/
+android/.kotlin/
+*.apk
+*.aab
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
