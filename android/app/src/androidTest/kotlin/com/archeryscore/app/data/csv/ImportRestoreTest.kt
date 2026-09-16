@@ -8,6 +8,8 @@ import com.archeryscore.app.data.local.AppDatabase
 import com.archeryscore.app.data.repository.RoomSessionRepository
 import com.archeryscore.app.domain.model.Discipline
 import com.archeryscore.app.domain.model.RoundType
+import com.archeryscore.app.domain.model.SessionStatus
+import com.archeryscore.app.domain.model.TargetType
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -62,6 +64,7 @@ class ImportRestoreTest {
                                     distanceM = s.distanceM,
                                     discipline = s.discipline,
                                     roundType = s.roundType,
+                                    targetType = s.targetType,
                                     endNumber = end.endNumber,
                                     arrowNumber = arrow.arrowNumber,
                                     score = arrow.score,
