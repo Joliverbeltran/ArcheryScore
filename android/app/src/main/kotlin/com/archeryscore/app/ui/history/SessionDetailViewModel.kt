@@ -49,6 +49,7 @@ class SessionDetailViewModel @Inject constructor(
                     distanceM = detail.session.distanceM,
                     discipline = detail.session.discipline,
                     roundType = detail.session.roundType,
+                    targetType = detail.session.targetType,
                     endNumber = e.end.endNumber,
                     arrowNumber = a.arrowNumber,
                     score = a.score,

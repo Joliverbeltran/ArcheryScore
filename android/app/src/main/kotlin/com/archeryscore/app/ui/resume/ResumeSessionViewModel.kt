@@ -6,6 +6,7 @@ import com.archeryscore.app.domain.model.Discipline
 import com.archeryscore.app.domain.model.RoundType
 import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionStatus
+import com.archeryscore.app.domain.model.TargetType
 import com.archeryscore.app.domain.model.UserPreferences
 import com.archeryscore.app.domain.repository.PreferencesRepository
 import com.archeryscore.app.domain.repository.SessionRepository
@@ -59,6 +60,7 @@ class ResumeSessionViewModel @Inject constructor(
 
     fun createSession(
         roundType: RoundType,
+        targetType: TargetType = TargetType.CM122,
         endCount: Int,
         arrowsPerEnd: Int,
         distanceM: Int,
@@ -70,6 +72,7 @@ class ResumeSessionViewModel @Inject constructor(
             val session = Session(
                 date = now,
                 roundType = roundType,
+                targetType = targetType,
                 distanceM = distanceM,
                 discipline = discipline,
                 endCount = endCount,
@@ -80,8 +83,10 @@ class ResumeSessionViewModel @Inject constructor(
                 updatedAt = now,
             )
             val created = sessionRepository.createSession(session)
+            val updatedDefaults = _uiState.value.defaults.copy(defaultTargetType = targetType)
+            preferencesRepository.updatePreferences(updatedDefaults)
             _uiState.update {
-                it.copy(activeSessionId = created.id.toString())
+                it.copy(activeSessionId = created.id.toString(), defaults = updatedDefaults)
             }
         }
     }
