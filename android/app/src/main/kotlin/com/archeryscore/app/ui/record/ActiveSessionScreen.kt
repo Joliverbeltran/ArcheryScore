@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -24,13 +23,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,7 +52,7 @@ fun ActiveSessionScreen(
     viewModel: ActiveSessionViewModel = hiltViewModel(),
 ) {
     val detail by viewModel.detail.collectAsState()
-    var editing by remember { mutableStateOf<Arrow?>(null) }
+    val placement by viewModel.placement.collectAsState()
     var confirmFinish by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -89,7 +86,9 @@ fun ActiveSessionScreen(
             modifier = Modifier.weight(1f),
         ) {
             items(content.ends, key = { it.end.id.toString() }) { end ->
-                EndCard(end, content.session.roundType) { editing = it }
+                EndCard(end, content.session.roundType) { arrow ->
+                    viewModel.startPlacement(arrow)
+                }
             }
         }
         Spacer(Modifier.height(8.dp))
@@ -105,15 +104,19 @@ fun ActiveSessionScreen(
         ) { Text(stringResource(R.string.finish_session)) }
     }
 
-    editing?.let { arrow ->
-        ScoreDialog(
-            arrow = arrow,
+    placement?.let { flow ->
+        TargetPlacementDialog(
+            targetType = content.session.targetType,
             roundType = content.session.roundType,
-            onDismiss = { editing = null },
-            onSave = { score, isX ->
-                viewModel.recordArrow(arrow, score, isX)
-                editing = null
-            },
+            arrowNumber = flow.arrow.arrowNumber,
+            arrowsPerEnd = content.session.arrowsPerEnd,
+            pending = flow.pending,
+            confirmedMarkers = viewModel.confirmedMarkers.collectAsState().value,
+            onPendingChange = viewModel::updatePending,
+            onConfirm = viewModel::confirmPlacement,
+            onDismiss = viewModel::discardPlacement,
+            isCorrection = flow.isCorrection,
+            previousLabel = flow.previousLabel,
         )
     }
 
@@ -178,7 +181,7 @@ private fun TotalRow(detail: SessionDetail) {
 private fun EndCard(
     end: EndWithArrows,
     roundType: RoundType,
-    onEdit: (Arrow) -> Unit,
+    onArrowClick: (Arrow) -> Unit,
 ) {
     Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -188,64 +191,13 @@ private fun EndCard(
                 end.arrows.forEach { arrow ->
                     FilterChip(
                         selected = false,
-                        onClick = { onEdit(arrow) },
+                        onClick = { onArrowClick(arrow) },
                         label = { Text(if (arrow.isXRing) "${arrow.score}X" else "${arrow.score}") },
                     )
                 }
             }
         }
     }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ScoreDialog(
-    arrow: Arrow,
-    roundType: RoundType,
-    onDismiss: () -> Unit,
-    onSave: (Int, Boolean) -> Unit,
-) {
-    var score by remember { mutableIntStateOf(arrow.score) }
-    var isX by remember { mutableStateOf(arrow.isXRing) }
-    val max = when (roundType) {
-        RoundType.TEN_ZONE -> 10
-        RoundType.FIVE_ZONE -> 5
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.score_arrow, arrow.arrowNumber)) },
-        text = {
-            Column {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    (0..max).forEach { value ->
-                        FilterChip(
-                            selected = score == value,
-                            onClick = {
-                                score = value
-                                if (value != max) isX = false
-                            },
-                            label = { Text("$value") },
-                        )
-                    }
-                }
-                if (roundType == RoundType.TEN_ZONE) {
-                    Spacer(Modifier.height(12.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(stringResource(R.string.x_ring))
-                        Spacer(Modifier.width(8.dp))
-                        Switch(checked = isX, onCheckedChange = { isX = it && score == max })
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onSave(score, isX) }) { Text(stringResource(R.string.save)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-        },
-    )
 }
 
 @Composable
