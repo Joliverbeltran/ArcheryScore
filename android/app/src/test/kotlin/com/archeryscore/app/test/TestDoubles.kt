@@ -27,6 +27,8 @@ class FakeSessionRepository : SessionRepository {
     private val sessions = mutableMapOf<String, Session>()
     private val detailFlow = MutableStateFlow<SessionDetail?>(null)
     private val listFlow = MutableStateFlow<List<Session>>(emptyList())
+    private val updatedArrows = mutableListOf<Arrow>()
+    val recordedUpdates: List<Arrow> get() = updatedArrows.toList()
 
     override fun observeSessions(): Flow<List<Session>> = listFlow
 
@@ -75,7 +77,11 @@ class FakeSessionRepository : SessionRepository {
         arrow: Arrow,
         newScore: Int,
         newIsXRing: Boolean,
-    ): Arrow = arrow.copy(score = newScore, isXRing = newIsXRing)
+    ): Arrow {
+        val updated = arrow.copy(score = newScore, isXRing = newIsXRing)
+        updatedArrows += updated
+        return updated
+    }
 
     override suspend fun getTotals(sessionId: String): SessionTotals? = null
 
