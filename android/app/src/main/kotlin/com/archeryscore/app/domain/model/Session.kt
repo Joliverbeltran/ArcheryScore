@@ -7,6 +7,7 @@ data class Session(
     val id: UUID = UUID.randomUUID(),
     val date: Instant,
     val roundType: RoundType,
+    val targetType: TargetType = TargetType.CM122,
     val distanceM: Int,
     val discipline: Discipline,
     val endCount: Int,

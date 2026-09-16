@@ -7,6 +7,7 @@ import com.archeryscore.app.domain.model.ImportedSession
 import com.archeryscore.app.domain.model.RoundType
 import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionStatus
+import com.archeryscore.app.domain.model.TargetType
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -27,13 +28,14 @@ data class CsvImportError(
 object CsvImporter {
 
     private val HEADER =
+        "session_id,date,distance_m,discipline,round_type,target_type,end_number,arrow_number,score,is_x_ring"
+    private val LEGACY_HEADER =
         "session_id,date,distance_m,discipline,round_type,end_number,arrow_number,score,is_x_ring"
     private val ISO_UTC =
         DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneOffset.UTC)
 
     private const val MAX_BYTES = 5 * 1024 * 1024
     private const val MAX_ROWS = 100_000
-    private const val FIELD_COUNT = 9
 
     fun import(csv: String, now: Instant = Instant.now()): CsvImportResult {
         errorRow = null
@@ -48,9 +50,14 @@ object CsvImporter {
         if (records == null) {
             return failure(0, "file", "malformed")
         }
-        if (records[0].joinToString(",") != HEADER) {
+
+        val header = records[0].joinToString(",")
+        val cols10 = header == HEADER
+        val cols9 = header == LEGACY_HEADER
+        if (!cols10 && !cols9) {
             return failure(1, "header", "invalid_header")
         }
+        val fieldCount = if (cols10) 10 else 9
 
         val dataRecords = records.drop(1)
         if (dataRecords.isEmpty()) {
@@ -64,10 +71,10 @@ object CsvImporter {
         for (index in dataRecords.indices) {
             val rowNumber = index + 1
             val fields = dataRecords[index]
-            if (fields.size != FIELD_COUNT) {
+            if (fields.size != fieldCount) {
                 return failure(rowNumber, "file", "field_count")
             }
-            val row = buildRow(fields, rowNumber) ?: return errorResult(rowNumber)
+            val row = buildRow(fields, rowNumber, cols10) ?: return errorResult(rowNumber)
             validRows += row
         }
 
@@ -82,6 +89,7 @@ object CsvImporter {
                     id = UUID.fromString(sessionId),
                     date = first.date,
                     roundType = first.roundType,
+                    targetType = first.targetType,
                     distanceM = first.distanceM,
                     discipline = first.discipline,
                     endCount = sessionRows.maxOf { it.endNumber },
@@ -105,7 +113,7 @@ object CsvImporter {
                 ImportedSession(session, ends)
             }
 
-    private fun buildRow(fields: List<String>, rowNumber: Int): CsvArrowRow? {
+    private fun buildRow(fields: List<String>, rowNumber: Int, cols10: Boolean): CsvArrowRow? {
         val sessionId = fields[0]
         if (!isUuid(sessionId)) {
             errorRow = CsvImportError(rowNumber, "session_id", "invalid_uuid")
@@ -131,22 +139,32 @@ object CsvImporter {
             errorRow = CsvImportError(rowNumber, "round_type", "invalid_round_type")
             return null
         }
-        val endNumber = fields[5].toIntOrNull()
+        val targetType = if (cols10) {
+            val t = enumOrNull<TargetType>(fields[5])
+            if (t == null) {
+                errorRow = CsvImportError(rowNumber, "target_type", "invalid_target_type")
+                return null
+            }
+            t
+        } else {
+            TargetType.CM122
+        }
+        val endNumber = fields[5 + if (cols10) 1 else 0].toIntOrNull()
         if (endNumber == null || endNumber < 1) {
             errorRow = CsvImportError(rowNumber, "end_number", "invalid_end_number")
             return null
         }
-        val arrowNumber = fields[6].toIntOrNull()
+        val arrowNumber = fields[6 + if (cols10) 1 else 0].toIntOrNull()
         if (arrowNumber == null || arrowNumber < 1) {
             errorRow = CsvImportError(rowNumber, "arrow_number", "invalid_arrow_number")
             return null
         }
-        val score = fields[7].toIntOrNull()
+        val score = fields[7 + if (cols10) 1 else 0].toIntOrNull()
         if (score == null || score !in 1..roundType.maxScore) {
             errorRow = CsvImportError(rowNumber, "score", "invalid_score")
             return null
         }
-        val isXRing = when (fields[8]) {
+        val isXRing = when (fields[8 + if (cols10) 1 else 0]) {
             "true" -> true
             "false" -> false
             else -> {
@@ -164,6 +182,7 @@ object CsvImporter {
             distanceM = distanceM,
             discipline = discipline,
             roundType = roundType,
+            targetType = targetType,
             endNumber = endNumber,
             arrowNumber = arrowNumber,
             score = score,

@@ -7,4 +7,5 @@ data class UserPreferences(
     val defaultDistanceM: Int = 18,
     val defaultDiscipline: Discipline = Discipline.OLYMPIC_RECURVE,
     val countXRingsDeeply: Boolean = false,
+    val defaultTargetType: TargetType = TargetType.CM122,
 )
