@@ -14,6 +14,7 @@
     <string name="arrows_per_end">Arrows per end</string>
     <string name="notes">Notes</string>
     <string name="round_type">Round type</string>
+    <string name="target_type">Target type</string>
     <string name="discipline">Discipline</string>
 
     <string name="ten_zone">Ten zone (0–10)</string>
@@ -31,9 +32,6 @@
     <string name="x_count">X count</string>
     <string name="arrow_format">Arrow %1$d</string>
     <string name="end_format">Ends %1$d of %2$d</string>
-    <string name="score_arrow">Score arrow %1$d</string>
-    <string name="x_ring">X ring</string>
-    <string name="save">Save</string>
 
     <string name="finish_dialog_title">Complete session?</string>
     <string name="finish_dialog_message">This session will be saved and can no longer be edited.</string>
@@ -64,4 +62,26 @@
     <string name="average_accuracy">Average accuracy %</string>
     <string name="per_discipline">Per discipline</string>
     <string name="empty_stats">Complete a session to see stats</string>
+
+    <string name="target_type_122cm">122 cm</string>
+    <string name="target_type_80cm">80 cm</string>
+    <string name="target_type_60cm">60 cm</string>
+    <string name="target_type_40cm">40 cm</string>
+    <string name="target_type_triple_vertical">Triple vertical</string>
+    <string name="target_type_triple_triangular">Triple triangular</string>
+
+    <string name="target_placement_title">Place arrow %1$d</string>
+    <string name="target_placement_correct_title">Correct arrow %1$d/%2$d</string>
+    <string name="target_placement_previous">Previous: %1$s</string>
+    <string name="target_placement_ok">OK</string>
+
+    <string name="score_badge_miss">M</string>
+    <string name="score_badge_x">X</string>
+    <string name="score_badge_ring_format">%1$d</string>
+
+    <plurals name="confirmed_arrows_count">
+        <item quantity="one">%1$d confirmed arrow</item>
+        <item quantity="other">%1$d confirmed arrows</item>
+    </plurals>
+    <string name="target_face_description">%1$s target with %2$s scoring</string>
 </resources>
