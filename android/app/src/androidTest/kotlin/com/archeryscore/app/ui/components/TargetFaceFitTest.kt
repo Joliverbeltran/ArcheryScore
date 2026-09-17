@@ -21,7 +21,7 @@ class TargetFaceFitTest {
     val composeRule = createComposeRule()
 
     @Test
-    fun `every target type fits inside its container with uniform scale`() {
+    fun everyTargetTypeFitsInsideItsContainerWithUniformScale() {
         val reported = mutableMapOf<TargetType, FaceTransform>()
 
         composeRule.setContent {
@@ -67,7 +67,7 @@ class TargetFaceFitTest {
     }
 
     @Test
-    fun `small and rotated containers are handled without distortion`() {
+    fun smallAndRotatedContainersAreHandledWithoutDistortion() {
         val landscape = mutableMapOf<TargetType, FaceTransform>()
         val portrait = mutableMapOf<TargetType, FaceTransform>()
 
