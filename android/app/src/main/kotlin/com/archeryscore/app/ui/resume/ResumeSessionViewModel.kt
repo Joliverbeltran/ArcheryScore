@@ -83,7 +83,12 @@ class ResumeSessionViewModel @Inject constructor(
                 updatedAt = now,
             )
             val created = sessionRepository.createSession(session)
-            val updatedDefaults = _uiState.value.defaults.copy(defaultTargetType = targetType)
+            val updatedDefaults = _uiState.value.defaults.copy(
+                defaultTargetType = targetType,
+                defaultDistanceM = distanceM,
+                defaultEndCount = endCount,
+                defaultArrowsPerEnd = arrowsPerEnd,
+            )
             preferencesRepository.updatePreferences(updatedDefaults)
             _uiState.update {
                 it.copy(activeSessionId = created.id.toString(), defaults = updatedDefaults)

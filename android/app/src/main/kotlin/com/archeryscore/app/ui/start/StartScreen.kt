@@ -28,12 +28,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.archeryscore.app.R
 import com.archeryscore.app.domain.model.Discipline
 import com.archeryscore.app.domain.model.RoundType
+import com.archeryscore.app.domain.model.SessionSetupOptions
 import com.archeryscore.app.domain.model.TargetType
 import com.archeryscore.app.ui.resume.ResumeSessionViewModel
 
@@ -53,14 +55,6 @@ fun StartScreen(
             onResumeActive(id)
         }
     }
-
-    var discipline by remember { mutableStateOf(state.defaults.defaultDiscipline) }
-    var roundType by remember { mutableStateOf(state.defaults.defaultRoundType) }
-    var targetType by remember { mutableStateOf(state.defaults.defaultTargetType) }
-    var distance by remember { mutableIntStateOf(state.defaults.defaultDistanceM) }
-    var endCount by remember { mutableIntStateOf(state.defaults.defaultEndCount) }
-    var arrowsPerEnd by remember { mutableIntStateOf(state.defaults.defaultArrowsPerEnd) }
-    var notes by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -85,69 +79,120 @@ fun StartScreen(
             }
         }
 
-        Spacer(Modifier.height(24.dp))
-        Text(stringResource(R.string.new_session), style = MaterialTheme.typography.titleMedium)
-
-        Spacer(Modifier.height(8.dp))
-        DisciplineDropdown(discipline) { discipline = it }
-
-        Spacer(Modifier.height(8.dp))
-        RoundTypeDropdown(roundType) { roundType = it }
-
-        Spacer(Modifier.height(8.dp))
-        TargetTypeDropdown(targetType) { targetType = it }
-
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = distance.toString(),
-            onValueChange = { distance = it.toIntOrNull() ?: 18 },
-            label = { Text(stringResource(R.string.distance_m)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = endCount.toString(),
-            onValueChange = { endCount = (it.toIntOrNull() ?: 6).coerceIn(1, 60) },
-            label = { Text(stringResource(R.string.end_count)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = arrowsPerEnd.toString(),
-            onValueChange = { arrowsPerEnd = (it.toIntOrNull() ?: 3).coerceIn(1, 12) },
-            label = { Text(stringResource(R.string.arrows_per_end)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(
-            value = notes,
-            onValueChange = { notes = it },
-            label = { Text(stringResource(R.string.notes)) },
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Spacer(Modifier.height(16.dp))
-        Button(
-            onClick = {
-                viewModel.createSession(
-                    roundType = roundType,
-                    targetType = targetType,
-                    endCount = endCount,
-                    arrowsPerEnd = arrowsPerEnd,
-                    distanceM = distance,
-                    discipline = discipline,
-                    notes = notes.ifBlank { null },
+        if (!state.loading) {
+            var discipline by remember { mutableStateOf(state.defaults.defaultDiscipline) }
+            var roundType by remember { mutableStateOf(state.defaults.defaultRoundType) }
+            var targetType by remember { mutableStateOf(state.defaults.defaultTargetType) }
+            var distanceIndex by remember {
+                mutableIntStateOf(
+                    SessionSetupOptions.indexOfDistance(
+                        SessionSetupOptions.nearest(
+                            SessionSetupOptions.DISTANCES_M,
+                            state.defaults.defaultDistanceM,
+                        ),
+                    ),
                 )
-            },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.start_session))
+            }
+            var endsIndex by remember {
+                mutableIntStateOf(
+                    SessionSetupOptions.indexOfEnds(
+                        SessionSetupOptions.nearest(
+                            SessionSetupOptions.END_COUNTS,
+                            state.defaults.defaultEndCount,
+                        ),
+                    ),
+                )
+            }
+            var arrowsIndex by remember {
+                mutableIntStateOf(
+                    SessionSetupOptions.indexOfArrows(
+                        SessionSetupOptions.nearest(
+                            SessionSetupOptions.ARROWS_PER_END,
+                            state.defaults.defaultArrowsPerEnd,
+                        ),
+                    ),
+                )
+            }
+            var notes by remember { mutableStateOf("") }
+
+            Spacer(Modifier.height(24.dp))
+            Text(stringResource(R.string.new_session), style = MaterialTheme.typography.titleMedium)
+
+            Spacer(Modifier.height(8.dp))
+            DisciplineDropdown(discipline) { discipline = it }
+
+            Spacer(Modifier.height(8.dp))
+            RoundTypeDropdown(roundType) { roundType = it }
+
+            Spacer(Modifier.height(8.dp))
+            TargetTypeDropdown(targetType) { targetType = it }
+
+            Spacer(Modifier.height(8.dp))
+            OptionSlider(
+                labelRes = R.string.distance_m,
+                values = SessionSetupOptions.DISTANCES_M,
+                selectedIndex = distanceIndex,
+                onIndexChange = { distanceIndex = it },
+                valueText = stringResource(
+                    R.string.distance_value,
+                    SessionSetupOptions.distanceAtIndex(distanceIndex),
+                ),
+                testTag = DISTANCE_SLIDER_TAG,
+            )
+
+            Spacer(Modifier.height(8.dp))
+            OptionSlider(
+                labelRes = R.string.end_count,
+                values = SessionSetupOptions.END_COUNTS,
+                selectedIndex = endsIndex,
+                onIndexChange = { endsIndex = it },
+                valueText = pluralStringResource(
+                    R.plurals.end_count_value,
+                    SessionSetupOptions.endCountAtIndex(endsIndex),
+                    SessionSetupOptions.endCountAtIndex(endsIndex),
+                ),
+                testTag = END_COUNT_SLIDER_TAG,
+            )
+
+            Spacer(Modifier.height(8.dp))
+            OptionSlider(
+                labelRes = R.string.arrows_per_end,
+                values = SessionSetupOptions.ARROWS_PER_END,
+                selectedIndex = arrowsIndex,
+                onIndexChange = { arrowsIndex = it },
+                valueText = pluralStringResource(
+                    R.plurals.arrows_per_end_value,
+                    SessionSetupOptions.arrowsAtIndex(arrowsIndex),
+                    SessionSetupOptions.arrowsAtIndex(arrowsIndex),
+                ),
+                testTag = ARROWS_PER_END_SLIDER_TAG,
+            )
+
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = notes,
+                onValueChange = { notes = it },
+                label = { Text(stringResource(R.string.notes)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    viewModel.createSession(
+                        roundType = roundType,
+                        targetType = targetType,
+                        endCount = SessionSetupOptions.endCountAtIndex(endsIndex),
+                        arrowsPerEnd = SessionSetupOptions.arrowsAtIndex(arrowsIndex),
+                        distanceM = SessionSetupOptions.distanceAtIndex(distanceIndex),
+                        discipline = discipline,
+                        notes = notes.ifBlank { null },
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.start_session))
+            }
         }
     }
 }
@@ -251,3 +296,6 @@ private fun RoundTypeDropdown(
 }
 
 const val TARGET_TYPE_DROPDOWN_TAG = "target_type_dropdown"
+const val DISTANCE_SLIDER_TAG = "distance_slider"
+const val END_COUNT_SLIDER_TAG = "end_count_slider"
+const val ARROWS_PER_END_SLIDER_TAG = "arrows_per_end_slider"

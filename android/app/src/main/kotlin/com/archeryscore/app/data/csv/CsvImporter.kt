@@ -125,7 +125,7 @@ object CsvImporter {
             return null
         }
         val distanceM = fields[2].toIntOrNull()
-        if (distanceM == null || distanceM !in 10..300) {
+        if (distanceM == null || distanceM !in 8..300) {
             errorRow = CsvImportError(rowNumber, "distance_m", "invalid_distance")
             return null
         }

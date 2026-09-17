@@ -12,6 +12,15 @@
     <string name="distance_m">Distance (m)</string>
     <string name="end_count">Ends</string>
     <string name="arrows_per_end">Arrows per end</string>
+    <string name="distance_value">%1$d m</string>
+    <plurals name="end_count_value">
+        <item quantity="one">%1$d end</item>
+        <item quantity="other">%1$d ends</item>
+    </plurals>
+    <plurals name="arrows_per_end_value">
+        <item quantity="one">%1$d arrow per end</item>
+        <item quantity="other">%1$d arrows per end</item>
+    </plurals>
     <string name="notes">Notes</string>
     <string name="round_type">Round type</string>
     <string name="target_type">Target type</string>
