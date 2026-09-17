@@ -8,6 +8,13 @@
 
 **Input**: User description: "Change input methods. Use slider to set distance (8, 12,18,30,40,50,70,90 meters). Use slider to select number of arrows (1,3,6). Use a slider to select number of ends (1,3,6,9,12). This will improve input method by removing the need of keyboard and aligns with standard archary tournament practices."
 
+## Clarifications
+
+### Session 2026-09-17
+
+- Q: Default-preference behavior after session creation → A: Auto-save the last used slider values as the new stored preference defaults (Option A)
+- Q: CSV round-trip for the new 8 m distance value → A: Relax the importer lower distance bound to accept ≥ 8 m so all slider values round-trip (Option A)
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Set Distance with a Slider (Priority: P1)
@@ -77,6 +84,7 @@ The archer completes an entire session setup without ever seeing a keyboard. All
 1. **Given** the session setup screen is open, **When** the user configures distance, arrows per end, and ends using the sliders, **Then** no keyboard appears during any of these interactions
 2. **Given** all three slider values have been set, **When** the user taps the start session button, **Then** a valid session is created with all three configured values
 3. **Given** the session setup screen is open with all sliders at their defaults, **When** the user adjusts any slider and starts a session, **Then** the session uses the slider values, not the old text-field defaults
+4. **Given** the user creates a session with specific slider values, **When** they open the session setup screen again for a new session, **Then** all three sliders are pre-positioned at the last-used values without any manual re-entry
 
 ---
 
@@ -86,6 +94,7 @@ The archer completes an entire session setup without ever seeing a keyboard. All
 - What happens when the app is upgraded from a version that used free-text input with custom values not in the new slider steps? The slider defaults to the closest valid step for any out-of-range saved preference.
 - What happens if the user wants a distance not in the predefined list (e.g., 50m is available but 55m is not)? The system only offers the 8 predefined distances; custom distances are not supported through the slider.
 - What happens to sessions already created with the old text-field input? They remain unchanged and unaffected; the slider change only affects new session setup.
+- What happens when an 8 m session is exported and re-imported? The CSV importer accepts distances of 8 m and above, so the session round-trips without error.
 - What happens when the notes text field is focused? The keyboard appears for notes only, which is expected and acceptable since notes require free-text input.
 
 ## Requirements *(mandatory)*
@@ -101,14 +110,15 @@ The archer completes an entire session setup without ever seeing a keyboard. All
 - **FR-007**: System MUST persist the selected slider values as session configuration (distance, arrows per end, end count) when the session is created
 - **FR-008**: System MUST pre-populate each slider with the user's saved default preference when the session setup screen opens, snapping to the nearest valid step if the saved value is not a valid step
 - **FR-009**: System MUST preserve existing sessions and their configuration created with the previous text-field input method; historical data MUST NOT be affected
-- **FR-010**: System MUST remember the last selected slider values and use them as defaults for the next new session (in addition to the persistent preference defaults)
+- **FR-010**: System MUST auto-save the last selected slider values (distance, arrows per end, end count) into the stored preference defaults when a session is created, so the next new session opens pre-positioned at those values (replacing the previous defaults)
 - **FR-011**: System MUST allow the optional notes text field to continue functioning as a free-text input with keyboard; this is the only field where a keyboard may appear
 - **FR-012**: System MUST keep all existing session setup options (discipline dropdown, round type dropdown, target type dropdown) unchanged; only the three numeric inputs are converted to sliders
+- **FR-013**: System MUST accept distances of 8 m and above when validating imported CSV data, so any session created via the distance slider survives a CSV export/import round-trip
 
 ### Key Entities *(include if feature involves data)*
 
 - **Session Configuration**: The set of parameters used to create a new session — distance (meters), arrows per end, end count, discipline, round type, target type, and notes. The slider change affects how the first three parameters are input but does not change the entity model itself.
-- **User Preferences**: Stored defaults for session setup parameters. The distance, arrows-per-end, and end-count defaults now correspond to valid slider step values rather than arbitrary integers. Existing preference values outside the new step sets are handled by snapping to the nearest valid step.
+- **User Preferences**: Stored defaults for session setup parameters. The distance, arrows-per-end, and end-count defaults now correspond to valid slider step values rather than arbitrary integers. Existing preference values outside the new step sets are handled by snapping to the nearest valid step. On each session creation, the selected slider values auto-save as the new defaults (FR-010).
 
 ## Success Criteria *(mandatory)*
 
@@ -120,6 +130,8 @@ The archer completes an entire session setup without ever seeing a keyboard. All
 - **SC-004**: The selected value for each slider is always visible as a label, eliminating any ambiguity about what value is currently set
 - **SC-005**: Existing sessions created with the old text-field input are fully preserved with 0% data regression
 - **SC-006**: The three predefined step sets cover all standard archery tournament configurations: distances (8–90m), arrows (1, 3, 6), and ends (1–12)
+- **SC-007**: After a session is created, the next new session's sliders open pre-positioned at the last-used values (auto-saved defaults) without any additional user action
+- **SC-008**: 100% of sessions created with any slider distance value (including 8 m) export to CSV and re-import successfully with all values intact
 
 ## Assumptions
 
@@ -127,6 +139,7 @@ The archer completes an entire session setup without ever seeing a keyboard. All
 - The 3 arrows-per-end values (1, 3, 6) cover the standard tournament end sizes: 1 arrow for single-arrow ends, 3 arrows for half-end practice, and 6 arrows for full WA standard ends
 - The 5 end-count values (1, 3, 6, 9, 12) cover common round lengths; the maximum of 12 ends aligns with standard 72-arrow qualifying rounds (12 ends x 6 arrows)
 - Users who previously entered custom values via text fields (e.g., distance of 25m or 99m) will have their defaults snapped to the nearest valid slider step upon upgrade; this is acceptable because such non-standard values were rare and the slider steps cover all tournament-standard configurations
+- The CSV importer's distance validation is aligned to the slider's range (minimum 8 m) while keeping the existing maximum, so exported data remains importable and legacy files with distances ≥ 10 m are unaffected
 - The notes text field remains as free-text input; requiring keyboard-free input for notes is impractical since notes are inherently unstructured text
 - The three slider controls follow the app's existing visual design language so the setup screen feels consistent, with no introduced third-party components
 - Performance, accessibility, and UI/UX requirements from the original archery and local-storage specs are inherited and remain in force
