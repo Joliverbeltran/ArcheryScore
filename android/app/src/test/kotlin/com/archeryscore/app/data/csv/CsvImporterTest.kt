@@ -42,6 +42,9 @@ class CsvImporterTest {
 
     private val header = "session_id,date,distance_m,discipline,round_type,end_number,arrow_number,score,is_x_ring"
 
+    private val header10 =
+        "session_id,date,distance_m,discipline,round_type,target_type,end_number,arrow_number,score,is_x_ring"
+
     private fun importedToRows(sessions: List<ImportedSession>): List<CsvArrowRow> =
         sessions.flatMap { imported ->
             imported.ends.flatMap { end ->
@@ -151,6 +154,49 @@ class CsvImporterTest {
 
         val failure = assertInstanceOf(CsvImportResult.Failure::class.java, result)
         assertEquals("distance_m", failure.error.column)
+    }
+
+    @Test
+    fun `distance of eight meters is accepted`() {
+        val csv = "$header\n${UUID.randomUUID()},2026-09-08T09:15:00Z,8,OLYMPIC_RECURVE,TEN_ZONE,1,1,10,true"
+
+        val result = CsvImporter.import(csv, now)
+
+        val success = assertInstanceOf(CsvImportResult.Success::class.java, result)
+        assertEquals(8, success.sessions.single().session.distanceM)
+    }
+
+    @Test
+    fun `distance below eight meters is rejected`() {
+        val csv = "$header\n${UUID.randomUUID()},2026-09-08T09:15:00Z,7,OLYMPIC_RECURVE,TEN_ZONE,1,1,10,true"
+
+        val result = CsvImporter.import(csv, now)
+
+        val failure = assertInstanceOf(CsvImportResult.Failure::class.java, result)
+        assertEquals("distance_m", failure.error.column)
+    }
+
+    @Test
+    fun `distance of three hundred meters is accepted`() {
+        val csv = "$header\n${UUID.randomUUID()},2026-09-08T09:15:00Z,300,OLYMPIC_RECURVE,TEN_ZONE,1,1,10,true"
+
+        val result = CsvImporter.import(csv, now)
+
+        val success = assertInstanceOf(CsvImportResult.Success::class.java, result)
+        assertEquals(300, success.sessions.single().session.distanceM)
+    }
+
+    @Test
+    fun `eight meter session round trips through export and import`() {
+        val sessionId = UUID.randomUUID().toString()
+        val csv =
+            "$header10\r\n$sessionId,2026-09-08T09:15:00Z,8,OLYMPIC_RECURVE,TEN_ZONE,CM122,1,1,10,true"
+
+        val result = CsvImporter.import(csv, now)
+
+        val success = assertInstanceOf(CsvImportResult.Success::class.java, result)
+        assertEquals(8, success.sessions.single().session.distanceM)
+        assertEquals(csv, CsvExporter.export(importedToRows(success.sessions)))
     }
 
     @Test

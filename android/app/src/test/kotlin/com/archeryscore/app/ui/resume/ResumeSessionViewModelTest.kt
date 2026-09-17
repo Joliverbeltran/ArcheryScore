@@ -9,6 +9,7 @@ import com.archeryscore.app.test.FakePreferencesRepository
 import com.archeryscore.app.test.FakeSessionRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -178,5 +179,30 @@ class ResumeSessionViewModelTest {
         advanceUntilIdle()
 
         assertEquals(TargetType.TRIPLE_VERTICAL, vm.uiState.value.defaults.defaultTargetType)
+    }
+
+    @Test
+    fun `creating a session remembers slider values as the new defaults`() = runTest(dispatcher.scheduler) {
+        val vm = ResumeSessionViewModel(repo, prefs)
+        advanceUntilIdle()
+
+        vm.createSession(
+            roundType = RoundType.TEN_ZONE,
+            endCount = 9,
+            arrowsPerEnd = 6,
+            distanceM = 70,
+            discipline = Discipline.OLYMPIC_RECURVE,
+        )
+        advanceUntilIdle()
+
+        val defaults = vm.uiState.value.defaults
+        assertEquals(70, defaults.defaultDistanceM)
+        assertEquals(9, defaults.defaultEndCount)
+        assertEquals(6, defaults.defaultArrowsPerEnd)
+
+        val persisted = prefs.observePreferences().first()
+        assertEquals(70, persisted.defaultDistanceM)
+        assertEquals(9, persisted.defaultEndCount)
+        assertEquals(6, persisted.defaultArrowsPerEnd)
     }
 }
