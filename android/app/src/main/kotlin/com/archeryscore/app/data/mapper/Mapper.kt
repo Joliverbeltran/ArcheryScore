@@ -9,6 +9,7 @@ import com.archeryscore.app.domain.model.End
 import com.archeryscore.app.domain.model.RoundType
 import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionStatus
+import com.archeryscore.app.domain.model.TargetType
 import java.time.Instant
 import java.util.UUID
 
@@ -18,6 +19,7 @@ object Mapper {
         id = session.id.toString(),
         date = session.date.toEpochMilli(),
         roundType = session.roundType.name,
+        targetType = session.targetType.name,
         distanceM = session.distanceM,
         discipline = session.discipline.name,
         endCount = session.endCount,
@@ -32,6 +34,7 @@ object Mapper {
         id = UUID.fromString(e.id),
         date = Instant.ofEpochMilli(e.date),
         roundType = RoundType.valueOf(e.roundType),
+        targetType = safeTargetType(e.targetType),
         distanceM = e.distanceM,
         discipline = Discipline.valueOf(e.discipline),
         endCount = e.endCount,
@@ -73,4 +76,7 @@ object Mapper {
         isXRing = e.isXRing,
         editedAt = Instant.ofEpochMilli(e.editedAt),
     )
+
+    private fun safeTargetType(name: String): TargetType =
+        runCatching { TargetType.valueOf(name) }.getOrElse { TargetType.CM122 }
 }

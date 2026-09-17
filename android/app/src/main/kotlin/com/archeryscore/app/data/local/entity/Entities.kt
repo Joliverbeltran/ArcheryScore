@@ -13,6 +13,7 @@ data class SessionEntity(
     @PrimaryKey val id: String,
     val date: Long,
     @ColumnInfo(name = "round_type") val roundType: String,
+    @ColumnInfo(name = "target_type") val targetType: String = "CM122",
     @ColumnInfo(name = "distance_m") val distanceM: Int,
     val discipline: String,
     @ColumnInfo(name = "end_count") val endCount: Int,

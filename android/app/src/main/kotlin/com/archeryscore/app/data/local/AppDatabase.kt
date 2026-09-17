@@ -25,7 +25,7 @@ private const val TAG = "AppDatabase"
         EndEntity::class,
         ArrowEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -38,7 +38,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context, AppDatabase::class.java, DB_NAME)
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .openHelperFactory(CorruptionSafeHelperFactory(context))
                 .build()
     }
@@ -83,6 +83,15 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
  * DB file (plus -wal/-shm) so the next open rebuilds an empty database instead
  * of crashing on every launch.
  */
+
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "ALTER TABLE sessions ADD COLUMN target_type TEXT NOT NULL DEFAULT 'CM122'",
+        )
+    }
+}
+
 private class CorruptionSafeHelperFactory(
     private val context: Context,
 ) : SupportSQLiteOpenHelper.Factory {

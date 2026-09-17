@@ -4,6 +4,7 @@ import com.archeryscore.app.domain.model.Discipline
 import com.archeryscore.app.domain.model.RoundType
 import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionStatus
+import com.archeryscore.app.domain.model.TargetType
 import com.archeryscore.app.test.FakePreferencesRepository
 import com.archeryscore.app.test.FakeSessionRepository
 import kotlinx.coroutines.Dispatchers
@@ -139,5 +140,43 @@ class ResumeSessionViewModelTest {
         assertEquals(6, state.defaults.defaultArrowsPerEnd)
         assertEquals(50, state.defaults.defaultDistanceM)
         assertTrue(state.defaults.defaultDiscipline == Discipline.BAREBOW)
+    }
+
+    @Test
+    fun `creating a session persists the chosen target type into the session`() = runTest(dispatcher.scheduler) {
+        val vm = ResumeSessionViewModel(repo, prefs)
+        advanceUntilIdle()
+
+        vm.createSession(
+            roundType = RoundType.TEN_ZONE,
+            targetType = TargetType.CM80,
+            endCount = 6,
+            arrowsPerEnd = 3,
+            distanceM = 18,
+            discipline = Discipline.OLYMPIC_RECURVE,
+        )
+        advanceUntilIdle()
+
+        val created = repo.getSession(vm.uiState.value.activeSessionId!!)!!
+        assertEquals(TargetType.CM80, created.targetType)
+    }
+
+    @Test
+    fun `creating a session remembers the chosen target type as the new default`() = runTest(dispatcher.scheduler) {
+        val vm = ResumeSessionViewModel(repo, prefs)
+        advanceUntilIdle()
+        assertEquals(TargetType.CM122, vm.uiState.value.defaults.defaultTargetType)
+
+        vm.createSession(
+            roundType = RoundType.TEN_ZONE,
+            targetType = TargetType.TRIPLE_VERTICAL,
+            endCount = 6,
+            arrowsPerEnd = 3,
+            distanceM = 18,
+            discipline = Discipline.OLYMPIC_RECURVE,
+        )
+        advanceUntilIdle()
+
+        assertEquals(TargetType.TRIPLE_VERTICAL, vm.uiState.value.defaults.defaultTargetType)
     }
 }

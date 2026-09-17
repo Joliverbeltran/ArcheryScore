@@ -8,6 +8,7 @@ import com.archeryscore.app.domain.model.RoundType
 import com.archeryscore.app.domain.model.Session
 import com.archeryscore.app.domain.model.SessionStatus
 import com.archeryscore.app.domain.repository.EndWithArrows
+import com.archeryscore.app.ui.record.PlacementPoint
 import com.archeryscore.app.domain.repository.SessionDetail
 import com.archeryscore.app.domain.usecase.EditScoreUseCase
 import com.archeryscore.app.test.FakeSessionRepository
@@ -172,5 +173,158 @@ class ActiveSessionViewModelTest {
         advanceUntilIdle()
 
         assertTrue(repo.getSession(s.id.toString()) != null)
+    }
+
+    @Test
+    fun `startPlacement shows the arrow and clears pending`() = runTest(dispatcher.scheduler) {
+        val s = session(endCount = 1)
+        val existing = end(s.id, 1, listOf(0, 0))
+        val vm = vm(s, ends = listOf(existing))
+        advanceUntilIdle()
+
+        vm.startPlacement(existing.arrows.first())
+        advanceUntilIdle()
+
+        val flow = vm.placement.value
+        assertEquals(existing.arrows.first().id, flow?.arrow?.id)
+        assertEquals(null, flow?.pending)
+    }
+
+    @Test
+    fun `updatePending updates the pending marker`() = runTest(dispatcher.scheduler) {
+        val s = session(endCount = 1)
+        val existing = end(s.id, 1, listOf(0, 0))
+        val vm = vm(s, ends = listOf(existing))
+        advanceUntilIdle()
+
+        vm.startPlacement(existing.arrows.first())
+        vm.updatePending(PlacementPoint(0.1f, 0.2f))
+        advanceUntilIdle()
+
+        assertEquals(PlacementPoint(0.1f, 0.2f), vm.placement.value?.pending)
+    }
+
+    @Test
+    fun `confirmPlacement persists the resolved score and advances within the end`() = runTest(dispatcher.scheduler) {
+        val s = session(endCount = 1, arrowsPerEnd = 2)
+        val existing = end(s.id, 1, listOf(0, 0))
+        repo.createSession(s)
+        val vm = vm(s, ends = listOf(existing))
+        advanceUntilIdle()
+
+        vm.startPlacement(existing.arrows.first())
+        vm.updatePending(PlacementPoint(0f, 0f)) // exact center → TEN_ZONE score 10, X
+        vm.confirmPlacement()
+        advanceUntilIdle()
+
+        val flow = vm.placement.value
+        assertEquals(existing.arrows[1].id, flow?.arrow?.id)
+        assertEquals(null, flow?.pending)
+    }
+
+    @Test
+    fun `confirmPlacement on last arrow closes the flow`() = runTest(dispatcher.scheduler) {
+        val s = session(endCount = 1, arrowsPerEnd = 1)
+        val existing = end(s.id, 1, listOf(0))
+        repo.createSession(s)
+        val vm = vm(s, ends = listOf(existing))
+        advanceUntilIdle()
+
+        vm.startPlacement(existing.arrows.first())
+        vm.updatePending(PlacementPoint(0f, 0f))
+        vm.confirmPlacement()
+        advanceUntilIdle()
+
+        assertEquals(null, vm.placement.value)
+    }
+
+    @Test
+    fun `confirmedPlacement collects the point for subsequent arrows in the end`() = runTest(dispatcher.scheduler) {
+        val s = session(endCount = 1, arrowsPerEnd = 3)
+        val existing = end(s.id, 1, listOf(0, 0, 0))
+        repo.createSession(s)
+        val vm = vm(s, ends = listOf(existing))
+        advanceUntilIdle()
+
+        vm.startPlacement(existing.arrows[0])
+        vm.updatePending(PlacementPoint(0.2f, -0.2f))
+        vm.confirmPlacement()
+        advanceUntilIdle()
+
+        assertEquals(listOf(PlacementPoint(0.2f, -0.2f)), vm.confirmedMarkers.value)
+
+        vm.updatePending(PlacementPoint(-0.1f, 0.4f))
+        vm.confirmPlacement()
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(PlacementPoint(0.2f, -0.2f), PlacementPoint(-0.1f, 0.4f)),
+            vm.confirmedMarkers.value,
+        )
+    }
+
+    @Test
+    fun `discardPlacement clears state without persisting`() = runTest(dispatcher.scheduler) {
+        val s = session(endCount = 1)
+        val existing = end(s.id, 1, listOf(0, 0))
+        repo.createSession(s)
+        val vm = vm(s, ends = listOf(existing))
+        advanceUntilIdle()
+
+        vm.startPlacement(existing.arrows.first())
+        vm.updatePending(PlacementPoint(0.3f, 0f))
+        vm.discardPlacement()
+        advanceUntilIdle()
+
+        assertEquals(null, vm.placement.value)
+    }
+
+    @Test
+    fun `startPlacement on a confirmed arrow opens correction mode with previous label`() = runTest(dispatcher.scheduler) {
+        val s = session(endCount = 1)
+        val existing = end(s.id, 1, listOf(9))
+        repo.createSession(s)
+        val vm = vm(s, ends = listOf(existing))
+        advanceUntilIdle()
+
+        vm.startPlacement(existing.arrows.first())
+        advanceUntilIdle()
+
+        val flow = vm.placement.value
+        assertEquals(true, flow?.isCorrection)
+        assertEquals("9", flow?.previousLabel)
+    }
+
+    @Test
+    fun `startPlacement on an unconfirmed arrow is not a correction`() = runTest(dispatcher.scheduler) {
+        val s = session(endCount = 1)
+        val existing = end(s.id, 1, listOf(0))
+        repo.createSession(s)
+        val vm = vm(s, ends = listOf(existing))
+        advanceUntilIdle()
+
+        vm.startPlacement(existing.arrows.first())
+        advanceUntilIdle()
+
+        assertEquals(false, vm.placement.value?.isCorrection)
+        assertEquals(null, vm.placement.value?.previousLabel)
+    }
+
+    @Test
+    fun `confirmPlacement in correction mode replaces the stored score`() = runTest(dispatcher.scheduler) {
+        val s = session(endCount = 1, arrowsPerEnd = 2)
+        val existing = end(s.id, 1, listOf(9, 0))
+        repo.createSession(s)
+        val vm = vm(s, ends = listOf(existing))
+        advanceUntilIdle()
+
+        vm.startPlacement(existing.arrows.first())
+        vm.updatePending(PlacementPoint(0f, 0f)) // exact center → score 10, X; replaces stored 9
+        vm.confirmPlacement()
+        advanceUntilIdle()
+
+        val flow = vm.placement.value
+        assertEquals(existing.arrows[1].id, flow?.arrow?.id)
+        assertEquals(false, flow?.isCorrection)
     }
 }

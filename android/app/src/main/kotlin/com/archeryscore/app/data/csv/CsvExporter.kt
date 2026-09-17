@@ -2,6 +2,7 @@ package com.archeryscore.app.data.csv
 
 import com.archeryscore.app.domain.model.Discipline
 import com.archeryscore.app.domain.model.RoundType
+import com.archeryscore.app.domain.model.TargetType
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -12,6 +13,7 @@ data class CsvArrowRow(
     val distanceM: Int,
     val discipline: Discipline,
     val roundType: RoundType,
+    val targetType: TargetType,
     val endNumber: Int,
     val arrowNumber: Int,
     val score: Int,
@@ -20,7 +22,7 @@ data class CsvArrowRow(
 
 object CsvExporter {
 
-    private val HEADER = "session_id,date,distance_m,discipline,round_type,end_number,arrow_number,score,is_x_ring"
+    private val HEADER = "session_id,date,distance_m,discipline,round_type,target_type,end_number,arrow_number,score,is_x_ring"
     private val ISO_UTC = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneOffset.UTC)
 
     fun export(rows: List<CsvArrowRow>): String {
@@ -36,6 +38,7 @@ object CsvExporter {
                 row.distanceM.toString(),
                 row.discipline.name,
                 row.roundType.name,
+                row.targetType.name,
                 row.endNumber.toString(),
                 row.arrowNumber.toString(),
                 row.score.toString(),

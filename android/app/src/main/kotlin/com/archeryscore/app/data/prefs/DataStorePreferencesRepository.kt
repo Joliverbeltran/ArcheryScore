@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.archeryscore.app.domain.model.Discipline
 import com.archeryscore.app.domain.model.RoundType
+import com.archeryscore.app.domain.model.TargetType
 import com.archeryscore.app.domain.model.UserPreferences
 import com.archeryscore.app.domain.repository.PreferencesRepository
 import kotlinx.coroutines.flow.Flow
@@ -24,6 +25,7 @@ class DataStorePreferencesRepository(
         val DEFAULT_DISTANCE_M = intPreferencesKey("default_distance_m")
         val DEFAULT_DISCIPLINE = stringPreferencesKey("default_discipline")
         val COUNT_X_RINGS = booleanPreferencesKey("count_x_rings_deeply")
+        val DEFAULT_TARGET_TYPE = stringPreferencesKey("default_target_type")
     }
 
     override fun observePreferences(): Flow<UserPreferences> =
@@ -35,6 +37,7 @@ class DataStorePreferencesRepository(
                 defaultDistanceM = prefs[Keys.DEFAULT_DISTANCE_M] ?: UserPreferences().defaultDistanceM,
                 defaultDiscipline = safeDiscipline(prefs[Keys.DEFAULT_DISCIPLINE]),
                 countXRingsDeeply = prefs[Keys.COUNT_X_RINGS] ?: false,
+                defaultTargetType = safeTargetType(prefs[Keys.DEFAULT_TARGET_TYPE]),
             )
         }
 
@@ -46,6 +49,7 @@ class DataStorePreferencesRepository(
             p[Keys.DEFAULT_DISTANCE_M] = prefs.defaultDistanceM
             p[Keys.DEFAULT_DISCIPLINE] = prefs.defaultDiscipline.name
             p[Keys.COUNT_X_RINGS] = prefs.countXRingsDeeply
+            p[Keys.DEFAULT_TARGET_TYPE] = prefs.defaultTargetType.name
         }
     }
 
@@ -56,4 +60,8 @@ class DataStorePreferencesRepository(
     private fun safeDiscipline(name: String?): Discipline =
         name?.let { runCatching { Discipline.valueOf(it) }.getOrNull() }
             ?: UserPreferences().defaultDiscipline
+
+    private fun safeTargetType(name: String?): TargetType =
+        name?.let { runCatching { TargetType.valueOf(it) }.getOrNull() }
+            ?: UserPreferences().defaultTargetType
 }

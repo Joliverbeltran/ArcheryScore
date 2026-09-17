@@ -27,12 +27,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.archeryscore.app.R
 import com.archeryscore.app.domain.model.Discipline
 import com.archeryscore.app.domain.model.RoundType
+import com.archeryscore.app.domain.model.TargetType
 import com.archeryscore.app.ui.resume.ResumeSessionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +56,7 @@ fun StartScreen(
 
     var discipline by remember { mutableStateOf(state.defaults.defaultDiscipline) }
     var roundType by remember { mutableStateOf(state.defaults.defaultRoundType) }
+    var targetType by remember { mutableStateOf(state.defaults.defaultTargetType) }
     var distance by remember { mutableIntStateOf(state.defaults.defaultDistanceM) }
     var endCount by remember { mutableIntStateOf(state.defaults.defaultEndCount) }
     var arrowsPerEnd by remember { mutableIntStateOf(state.defaults.defaultArrowsPerEnd) }
@@ -90,6 +93,9 @@ fun StartScreen(
 
         Spacer(Modifier.height(8.dp))
         RoundTypeDropdown(roundType) { roundType = it }
+
+        Spacer(Modifier.height(8.dp))
+        TargetTypeDropdown(targetType) { targetType = it }
 
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(
@@ -131,6 +137,7 @@ fun StartScreen(
             onClick = {
                 viewModel.createSession(
                     roundType = roundType,
+                    targetType = targetType,
                     endCount = endCount,
                     arrowsPerEnd = arrowsPerEnd,
                     distanceM = distance,
@@ -141,6 +148,36 @@ fun StartScreen(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(stringResource(R.string.start_session))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TargetTypeDropdown(
+    selected: TargetType,
+    onSelect: (TargetType) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = stringResource(selected.labelRes),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.target_type)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor()
+                .testTag(TARGET_TYPE_DROPDOWN_TAG),
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            TargetType.entries.forEach { t ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(t.labelRes)) },
+                    onClick = { onSelect(t); expanded = false },
+                )
+            }
         }
     }
 }
@@ -208,7 +245,9 @@ private fun RoundTypeDropdown(
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.five_zone)) },
                 onClick = { onSelect(RoundType.FIVE_ZONE); expanded = false },
-            )
+)
         }
     }
 }
+
+const val TARGET_TYPE_DROPDOWN_TAG = "target_type_dropdown"

@@ -2,6 +2,7 @@ package com.archeryscore.app.data.csv
 
 import com.archeryscore.app.domain.model.Discipline
 import com.archeryscore.app.domain.model.RoundType
+import com.archeryscore.app.domain.model.TargetType
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -24,6 +25,7 @@ class CsvExporterTest {
         distanceM = 18,
         discipline = discipline,
         roundType = RoundType.TEN_ZONE,
+        targetType = TargetType.CM122,
         endNumber = endNumber,
         arrowNumber = arrowNumber,
         score = score,
@@ -34,7 +36,7 @@ class CsvExporterTest {
     fun `header row matches exact contract`() {
         val lines = CsvExporter.export(listOf(row())).split("\r\n")
         assertEquals(
-            "session_id,date,distance_m,discipline,round_type,end_number,arrow_number,score,is_x_ring",
+            "session_id,date,distance_m,discipline,round_type,target_type,end_number,arrow_number,score,is_x_ring",
             lines[0],
         )
     }
@@ -57,18 +59,18 @@ class CsvExporterTest {
         val csv = CsvExporter.export(rows)
         val bodyLines = csv.split("\r\n").drop(1)
         assertEquals(4, bodyLines.size)
-        assertEquals(1, bodyLines[0].split(",")[5].toInt())
         assertEquals(1, bodyLines[0].split(",")[6].toInt())
-        assertEquals(1, bodyLines[1].split(",")[5].toInt())
-        assertEquals(2, bodyLines[1].split(",")[6].toInt())
-        assertEquals(2, bodyLines[2].split(",")[5].toInt())
+        assertEquals(1, bodyLines[0].split(",")[7].toInt())
+        assertEquals(1, bodyLines[1].split(",")[6].toInt())
+        assertEquals(2, bodyLines[1].split(",")[7].toInt())
+        assertEquals(2, bodyLines[2].split(",")[6].toInt())
         // Latest date sorts last.
         assertEquals("2026-09-09T00:00:00Z", bodyLines[3].split(",")[1])
     }
 
     @Test
     fun `empty input yields header only`() {
-        assertEquals("session_id,date,distance_m,discipline,round_type,end_number,arrow_number,score,is_x_ring", CsvExporter.export(emptyList()))
+        assertEquals("session_id,date,distance_m,discipline,round_type,target_type,end_number,arrow_number,score,is_x_ring", CsvExporter.export(emptyList()))
     }
 
     @Test

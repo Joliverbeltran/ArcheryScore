@@ -4,6 +4,7 @@ import com.archeryscore.app.domain.model.Discipline
 import com.archeryscore.app.domain.model.ImportedSession
 import com.archeryscore.app.domain.model.RoundType
 import com.archeryscore.app.domain.model.SessionStatus
+import com.archeryscore.app.domain.model.TargetType
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertInstanceOf
@@ -32,6 +33,7 @@ class CsvImporterTest {
         distanceM = 18,
         discipline = discipline,
         roundType = RoundType.TEN_ZONE,
+        targetType = TargetType.CM122,
         endNumber = endNumber,
         arrowNumber = arrowNumber,
         score = score,
@@ -50,6 +52,7 @@ class CsvImporterTest {
                         distanceM = imported.session.distanceM,
                         discipline = imported.session.discipline,
                         roundType = imported.session.roundType,
+                        targetType = imported.session.targetType,
                         endNumber = end.endNumber,
                         arrowNumber = arrow.arrowNumber,
                         score = arrow.score,
